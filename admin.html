@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>記事投稿 | SMG GUIDE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="page-header">
+  <div class="topbar">
+    <a class="brand" href="index.html">
+      <span class="mark">🌸</span>
+      <div>
+        <div class="brand-name">SMG</div>
+        <div class="brand-sub">SAKURA&nbsp;MIRAGE</div>
+      </div>
+    </a>
+  </div>
+  <p class="page-eyebrow">🔒 管理者専用</p>
+  <h1 class="page-title purple">POST</h1>
+  <p class="breadcrumb"><a href="index.html">HOME</a> ／ 記事投稿</p>
+</header>
+
+<main class="page-body admin-wrap">
+  <a class="back-link" href="index.html">‹ トップページへ戻る</a>
+
+  <div class="admin-card">
+    <h2>新しい記事を投稿</h2>
+
+    <form id="post-form">
+      <div class="field">
+        <label for="f-password">合言葉</label>
+        <input type="password" id="f-password" required placeholder="合言葉を入力">
+      </div>
+
+      <div class="field">
+        <label for="f-category">カテゴリー</label>
+        <select id="f-category" required>
+          <option value="EVENTS">EVENTS(イベント)</option>
+          <option value="GUIDES">GUIDES(ガイド)</option>
+          <option value="VIDEOS">VIDEOS(動画)</option>
+          <option value="NOTICE">NOTICE(お知らせ)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="f-title">タイトル</label>
+        <input type="text" id="f-title" required placeholder="例: 水晶戦争 開催のお知らせ">
+      </div>
+
+      <div class="field">
+        <label for="f-content">本文</label>
+        <textarea id="f-content" required placeholder="本文を入力してください"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="f-images">画像(スマホの写真を選択、複数可)</label>
+        <input type="file" id="f-images" accept="image/*" multiple>
+        <div class="field-hint">写真を選ぶと、下にプレビューが表示されます。</div>
+        <div class="thumb-preview" id="thumb-preview"></div>
+      </div>
+
+      <div class="field">
+        <label for="f-youtube">YouTubeリンク(1行に1つ、複数可・任意)</label>
+        <textarea id="f-youtube" placeholder="https://www.youtube.com/watch?v=..."></textarea>
+      </div>
+
+      <div class="field switch-row">
+        <input type="checkbox" id="f-published" checked style="width:20px;height:20px;">
+        <label for="f-published" style="margin:0;">すぐに公開する(オフにすると下書き保存)</label>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submit-btn">投稿する</button>
+
+      <div id="form-msg"></div>
+    </form>
+  </div>
+</main>
+
+<footer>
+  <h5>🌸 SMG ALLIANCE 🌸</h5>
+  <p class="en">TOGETHER WE GROW, TOGETHER WE WIN.</p>
+  <p class="copy">© Sakura Mirage Alliance. All Rights Reserved.</p>
+</footer>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  const cfg = window.SMG_CONFIG || {};
+  const imagesInput = document.getElementById("f-images");
+  const preview = document.getElementById("thumb-preview");
+  const form = document.getElementById("post-form");
+  const submitBtn = document.getElementById("submit-btn");
+  const msgBox = document.getElementById("form-msg");
+
+  let selectedFiles = [];
+
+  imagesInput.addEventListener("change", () => {
+    selectedFiles = Array.from(imagesInput.files || []);
+    preview.innerHTML = "";
+    selectedFiles.forEach(file => {
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      preview.appendChild(img);
+    });
+  });
+
+  function showMessage(text, type) {
+    msgBox.textContent = text;
+    msgBox.className = "form-msg " + type;
+  }
+
+  // 1枚の画像をSupabase Storageにアップロードし、公開URLを返す
+  async function uploadImage(file) {
+    const safeName = Date.now() + "_" + Math.random().toString(36).slice(2, 8) + "_" + file.name.replace(/[^a-zA-Z0-9._-]/g, "");
+    const uploadUrl = cfg.SUPABASE_URL.replace(/\/$/, "") + "/storage/v1/object/post-images/" + safeName;
+
+    const res = await fetch(uploadUrl, {
+      method: "POST",
+      headers: {
+        apikey: cfg.SUPABASE_PUBLISHABLE_KEY,
+        Authorization: "Bearer " + cfg.SUPABASE_PUBLISHABLE_KEY,
+        "Content-Type": file.type || "application/octet-stream"
+      },
+      body: file
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error("[SMG] 画像アップロード失敗:", errText);
+      throw new Error("画像のアップロードに失敗しました");
+    }
+
+    return cfg.SUPABASE_URL.replace(/\/$/, "") + "/storage/v1/object/public/post-images/" + safeName;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    showMessage("送信中です…", "ok");
+
+    try {
+      const password = document.getElementById("f-password").value;
+      const category = document.getElementById("f-category").value;
+      const title = document.getElementById("f-title").value.trim();
+      const content = document.getElementById("f-content").value.trim();
+      const published = document.getElementById("f-published").checked;
+      const youtubeUrls = document.getElementById("f-youtube").value
+        .split("\n").map(s => s.trim()).filter(Boolean);
+
+      if (!title || !content) {
+        showMessage("タイトルと本文は必須です。", "err");
+        submitBtn.disabled = false;
+        return;
+      }
+
+      // 画像を1枚ずつアップロード
+      const imageUrls = [];
+      for (const file of selectedFiles) {
+        showMessage("画像をアップロード中… (" + (imageUrls.length + 1) + "/" + selectedFiles.length + ")", "ok");
+        const url = await uploadImage(file);
+        imageUrls.push(url);
+      }
+
+      showMessage("記事を保存中…", "ok");
+
+      const payload = {
+        submit_key: password,
+        category: category,
+        title: title,
+        content: content,
+        published: published,
+        image_urls: imageUrls,
+        youtube_urls: youtubeUrls
+      };
+
+      const insertUrl = cfg.SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/posts";
+      const res = await fetch(insertUrl, {
+        method: "POST",
+        headers: {
+          apikey: cfg.SUPABASE_PUBLISHABLE_KEY,
+          Authorization: "Bearer " + cfg.SUPABASE_PUBLISHABLE_KEY,
+          "Content-Type": "application/json",
+          Prefer: "return=representation"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("[SMG] 投稿エラー:", errText);
+        if (errText.includes("合言葉が間違っています")) {
+          showMessage("合言葉が間違っています。", "err");
+        } else {
+          showMessage("投稿に失敗しました。時間をおいて再度お試しください。", "err");
+        }
+        submitBtn.disabled = false;
+        return;
+      }
+
+      showMessage("投稿しました!", "ok");
+      form.reset();
+      selectedFiles = [];
+      preview.innerHTML = "";
+
+    } catch (err) {
+      console.error("[SMG] エラー:", err);
+      showMessage("エラーが発生しました: " + err.message, "err");
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>

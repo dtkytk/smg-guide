@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EVENTS | SMG GUIDE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="page-header">
+  <div class="topbar">
+    <a class="brand" href="index.html">
+      <span class="mark">🌸</span>
+      <div>
+        <div class="brand-name">SMG</div>
+        <div class="brand-sub">SAKURA&nbsp;MIRAGE</div>
+      </div>
+    </a>
+    <div class="langs">
+      <span class="lang-btn" data-lang="jp">JP</span>
+      <span class="lang-btn" data-lang="en">EN</span>
+      <span class="lang-btn" data-lang="kr">KR</span>
+      <span class="lang-btn" data-lang="tr">TR</span>
+      <span class="lang-btn" data-lang="de">DE</span>
+    </div>
+  </div>
+  <p class="page-eyebrow">⚔️ イベント</p>
+  <h1 class="page-title">EVENTS</h1>
+  <p class="breadcrumb"><a href="index.html">HOME</a> ／ EVENTS</p>
+</header>
+
+<main class="page-body">
+  <a class="back-link" href="index.html">‹ トップページへ戻る</a>
+  <div id="list">
+    <div class="empty-state">読み込み中…</div>
+  </div>
+</main>
+
+<footer>
+  <h5>🌸 SMG ALLIANCE 🌸</h5>
+  <p class="en">TOGETHER WE GROW, TOGETHER WE WIN.</p>
+  <p class="copy">© Sakura Mirage Alliance. All Rights Reserved.</p>
+</footer>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  let posts = [];
+
+  function render(lang) {
+    const list = document.getElementById("list");
+    if (!posts.length) {
+      list.innerHTML = '<div class="empty-state">まだ投稿はありません。</div>';
+      return;
+    }
+    list.innerHTML = posts.map(p => {
+      const images = SMG.toArray(p.image_urls);
+      const thumb = images[0]
+        ? `<img class="thumb" src="${SMG.escapeHtml(images[0])}" alt="">`
+        : "";
+      return `
+        <a class="post-card" href="post.html?id=${p.id}">
+          ${thumb}
+          <div class="post-body">
+            <h2>${SMG.escapeHtml(SMG.v(p, "title", lang))}</h2>
+            <p class="excerpt">${SMG.escapeHtml(SMG.excerpt(SMG.v(p, "content", lang), 90))}</p>
+            <div class="meta">${SMG.formatDate(p.created_at)}</div>
+          </div>
+        </a>
+      `;
+    }).join("");
+  }
+
+  async function init() {
+    posts = await SMG.fetchPosts({ category: "EVENTS" });
+    render(SMG.getLang());
+  }
+
+  SMG.initLangButtons((lang) => render(lang));
+  init();
+</script>
+
+</body>
+</html>

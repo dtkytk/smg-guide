@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>記事 | SMG GUIDE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="page-header">
+  <div class="topbar">
+    <a class="brand" href="index.html">
+      <span class="mark">🌸</span>
+      <div>
+        <div class="brand-name">SMG</div>
+        <div class="brand-sub">SAKURA&nbsp;MIRAGE</div>
+      </div>
+    </a>
+    <div class="langs">
+      <span class="lang-btn" data-lang="jp">JP</span>
+      <span class="lang-btn" data-lang="en">EN</span>
+      <span class="lang-btn" data-lang="kr">KR</span>
+      <span class="lang-btn" data-lang="tr">TR</span>
+      <span class="lang-btn" data-lang="de">DE</span>
+    </div>
+  </div>
+  <p class="page-eyebrow" id="eyebrow">記事</p>
+  <h1 class="page-title" id="page-title">POST</h1>
+  <p class="breadcrumb"><a href="index.html">HOME</a> ／ <span id="crumb-cat">-</span></p>
+</header>
+
+<main class="page-body">
+  <a class="back-link" id="back-link" href="index.html">‹ 一覧へ戻る</a>
+  <div id="detail">
+    <div class="empty-state">読み込み中…</div>
+  </div>
+</main>
+
+<footer>
+  <h5>🌸 SMG ALLIANCE 🌸</h5>
+  <p class="en">TOGETHER WE GROW, TOGETHER WE WIN.</p>
+  <p class="copy">© Sakura Mirage Alliance. All Rights Reserved.</p>
+</footer>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  let post = null;
+
+  const categoryPage = {
+    EVENTS: "events.html",
+    GUIDES: "guides.html",
+    VIDEOS: "videos.html",
+    NOTICE: "notice.html"
+  };
+
+  function render(lang) {
+    const detail = document.getElementById("detail");
+    if (!post) {
+      detail.innerHTML = '<div class="empty-state">記事が見つかりませんでした。</div>';
+      return;
+    }
+
+    const cat = (post.category || "").toUpperCase();
+    document.getElementById("eyebrow").textContent = cat;
+    document.getElementById("page-title").textContent = cat;
+    document.getElementById("crumb-cat").textContent = cat;
+    const backHref = categoryPage[cat] || "index.html";
+    document.getElementById("back-link").href = backHref;
+    document.getElementById("back-link").textContent = "‹ " + cat + " 一覧へ戻る";
+
+    const title = SMG.v(post, "title", lang);
+    const content = SMG.v(post, "content", lang);
+    const images = SMG.toArray(post.image_urls);
+    const youtubeUrls = SMG.toArray(post.youtube_urls);
+
+    const gallery = images.length
+      ? `<div class="gallery">${images.map(src => `<img src="${SMG.escapeHtml(src)}" alt="">`).join("")}</div>`
+      : "";
+
+    const embeds = youtubeUrls
+      .map(SMG.toYoutubeEmbed)
+      .filter(Boolean)
+      .map(src => `<div class="video-embed"><iframe src="${src}" title="YouTube video" allowfullscreen></iframe></div>`)
+      .join("");
+
+    detail.innerHTML = `
+      <div class="post-detail">
+        <span class="cat-tag">${cat}</span>
+        <h1>${SMG.escapeHtml(title)}</h1>
+        <div class="meta">${SMG.formatDate(post.created_at)}</div>
+        <div class="body-text">${SMG.escapeHtml(content)}</div>
+        ${embeds}
+        ${gallery}
+      </div>
+    `;
+  }
+
+  async function init() {
+    const params = new URLSearchParams(location.search);
+    const id = params.get("id");
+    if (!id) {
+      document.getElementById("detail").innerHTML = '<div class="empty-state">記事IDが指定されていません。</div>';
+      return;
+    }
+    const posts = await SMG.fetchPosts({ id });
+    post = posts[0] || null;
+    render(SMG.getLang());
+  }
+
+  SMG.initLangButtons((lang) => render(lang));
+  init();
+</script>
+
+</body>
+</html>

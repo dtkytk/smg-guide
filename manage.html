@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>記事の管理・削除 | SMG GUIDE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .manage-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 0;
+    border-bottom:1px solid #f5dcea;
+  }
+  .manage-item:last-child{border-bottom:none;}
+  .manage-info{min-width:0;}
+  .manage-info h3{
+    margin:0 0 4px;
+    font-size:.92rem;
+    color:var(--ink);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .manage-info .meta{
+    font-size:.68rem;
+    color:var(--ink-soft);
+  }
+  .status-pill{
+    display:inline-block;
+    font-size:.62rem;
+    padding:2px 8px;
+    border-radius:10px;
+    margin-right:6px;
+    font-weight:700;
+  }
+  .status-pill.pub{background:#e9f9ee; color:#2f8a4c;}
+  .status-pill.draft{background:#f0eef5; color:#8a6b82;}
+  .delete-btn{
+    flex:none;
+    padding:8px 16px;
+    border-radius:20px;
+    border:1.5px solid #e8437f;
+    background:#fff;
+    color:#e8437f;
+    font-size:.75rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .delete-btn:disabled{opacity:.5; cursor:not-allowed;}
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="topbar">
+    <a class="brand" href="index.html">
+      <span class="mark">🌸</span>
+      <div>
+        <div class="brand-name">SMG</div>
+        <div class="brand-sub">SAKURA&nbsp;MIRAGE</div>
+      </div>
+    </a>
+  </div>
+  <p class="page-eyebrow">🔒 管理者専用</p>
+  <h1 class="page-title purple">MANAGE</h1>
+  <p class="breadcrumb"><a href="index.html">HOME</a> ／ 記事の管理・削除</p>
+</header>
+
+<main class="page-body admin-wrap">
+  <a class="back-link" href="admin.html">‹ 記事投稿ページへ</a>
+
+  <div class="admin-card">
+    <h2>記事の管理・削除</h2>
+
+    <div class="field">
+      <label for="f-password">合言葉</label>
+      <input type="password" id="f-password" placeholder="合言葉を入力">
+    </div>
+    <button type="button" class="submit-btn" id="load-btn">一覧を読み込む</button>
+    <div id="form-msg"></div>
+  </div>
+
+  <div class="admin-card" id="list-card" style="margin-top:18px; display:none;">
+    <h2>記事一覧(下書きも含む)</h2>
+    <div id="list"></div>
+  </div>
+</main>
+
+<footer>
+  <h5>🌸 SMG ALLIANCE 🌸</h5>
+  <p class="en">TOGETHER WE GROW, TOGETHER WE WIN.</p>
+  <p class="copy">© Sakura Mirage Alliance. All Rights Reserved.</p>
+</footer>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  const cfg = window.SMG_CONFIG || {};
+  const msgBox = document.getElementById("form-msg");
+  const loadBtn = document.getElementById("load-btn");
+  const listCard = document.getElementById("list-card");
+  const list = document.getElementById("list");
+  let currentKey = "";
+
+  function showMessage(text, type) {
+    msgBox.textContent = text;
+    msgBox.className = "form-msg " + type;
+  }
+
+  function render(posts) {
+    if (!posts.length) {
+      list.innerHTML = '<div class="empty-state">記事がありません。</div>';
+      return;
+    }
+    list.innerHTML = posts.map(p => `
+      <div class="manage-item" data-id="${p.id}">
+        <div class="manage-info">
+          <h3>
+            <span class="status-pill ${p.published ? "pub" : "draft"}">${p.published ? "公開中" : "下書き"}</span>
+            ${SMG.escapeHtml(p.title || "(無題)")}
+          </h3>
+          <div class="meta">${SMG.escapeHtml(p.category || "")} ・ ${SMG.formatDate(p.created_at)}</div>
+        </div>
+        <button class="delete-btn" data-id="${p.id}">削除</button>
+      </div>
+    `).join("");
+
+    list.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", () => deletePost(btn.dataset.id, btn));
+    });
+  }
+
+  async function loadPosts() {
+    const password = document.getElementById("f-password").value;
+    if (!password) {
+      showMessage("合言葉を入力してください。", "err");
+      return;
+    }
+    currentKey = password;
+    loadBtn.disabled = true;
+    showMessage("読み込み中…", "ok");
+
+    try {
+      const url = cfg.SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/rpc/list_all_posts";
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          apikey: cfg.SUPABASE_PUBLISHABLE_KEY,
+          Authorization: "Bearer " + cfg.SUPABASE_PUBLISHABLE_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ key: password })
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("[SMG] 一覧取得エラー:", errText);
+        if (errText.includes("合言葉が間違っています")) {
+          showMessage("合言葉が間違っています。", "err");
+        } else {
+          showMessage("読み込みに失敗しました。", "err");
+        }
+        return;
+      }
+
+      const posts = await res.json();
+      listCard.style.display = "block";
+      render(posts);
+      showMessage("読み込みました。(" + posts.length + "件)", "ok");
+    } catch (err) {
+      console.error("[SMG] エラー:", err);
+      showMessage("エラーが発生しました: " + err.message, "err");
+    } finally {
+      loadBtn.disabled = false;
+    }
+  }
+
+  async function deletePost(id, btn) {
+    if (!confirm("この記事を削除します。よろしいですか?元に戻せません。")) return;
+
+    btn.disabled = true;
+    btn.textContent = "削除中…";
+
+    try {
+      const url = cfg.SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/rpc/delete_post";
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          apikey: cfg.SUPABASE_PUBLISHABLE_KEY,
+          Authorization: "Bearer " + cfg.SUPABASE_PUBLISHABLE_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ post_id: Number(id), key: currentKey })
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("[SMG] 削除エラー:", errText);
+        showMessage("削除に失敗しました。", "err");
+        btn.disabled = false;
+        btn.textContent = "削除";
+        return;
+      }
+
+      const item = list.querySelector(`.manage-item[data-id="${id}"]`);
+      if (item) item.remove();
+      showMessage("削除しました。", "ok");
+    } catch (err) {
+      console.error("[SMG] エラー:", err);
+      showMessage("エラーが発生しました: " + err.message, "err");
+      btn.disabled = false;
+      btn.textContent = "削除";
+    }
+  }
+
+  loadBtn.addEventListener("click", loadPosts);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMG GUIDE | Sakura Mirage Alliance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<section class="hero">
+  <svg class="hero-bg" viewBox="0 0 1024 900" preserveAspectRatio="xMidYMin slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#f6d9ea"/>
+        <stop offset="40%" stop-color="#efd3ef"/>
+        <stop offset="75%" stop-color="#e2cbef"/>
+        <stop offset="100%" stop-color="#d3bde8"/>
+      </linearGradient>
+      <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#e7c9ea"/>
+        <stop offset="100%" stop-color="#d1a9de"/>
+      </linearGradient>
+      <radialGradient id="glow" cx="50%" cy="35%" r="60%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="castle" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ecd7f0"/>
+        <stop offset="100%" stop-color="#d9bce6"/>
+      </linearGradient>
+      <radialGradient id="blossom" cx="35%" cy="35%" r="70%">
+        <stop offset="0%" stop-color="#ffe4f0"/>
+        <stop offset="70%" stop-color="#f9a7c9"/>
+        <stop offset="100%" stop-color="#ef7fb0"/>
+      </radialGradient>
+    </defs>
+
+    <rect x="0" y="0" width="1024" height="900" fill="url(#sky)"/>
+    <rect x="0" y="560" width="1024" height="340" fill="url(#water)"/>
+    <circle cx="512" cy="260" r="380" fill="url(#glow)"/>
+
+    <g opacity="0.75" transform="translate(660,300)">
+      <rect x="60" y="140" width="220" height="140" fill="url(#castle)"/>
+      <polygon points="60,140 170,60 280,140" fill="url(#castle)"/>
+      <rect x="0" y="180" width="60" height="100" fill="url(#castle)"/>
+      <polygon points="0,180 30,140 60,180" fill="url(#castle)"/>
+      <rect x="280" y="190" width="55" height="90" fill="url(#castle)"/>
+      <polygon points="280,190 307,152 335,190" fill="url(#castle)"/>
+      <rect x="150" y="10" width="40" height="70" fill="url(#castle)"/>
+      <polygon points="150,10 170,-25 190,10" fill="url(#castle)"/>
+      <rect x="150" y="-45" width="6" height="25" fill="#c9a3da"/>
+    </g>
+    <path d="M 560 560 Q 690 500 830 560" stroke="#e9d3ee" stroke-width="10" fill="none" opacity="0.8"/>
+
+    <g transform="translate(0,-10)">
+      <path d="M -20 40 C 60 60 120 90 190 150 C 230 185 260 210 300 220" stroke="#7a5548" stroke-width="7" fill="none" opacity="0.85"/>
+      <path d="M 60 65 C 90 30 120 10 160 0" stroke="#7a5548" stroke-width="4" fill="none" opacity="0.8"/>
+      <path d="M 140 110 C 160 80 190 60 220 55" stroke="#7a5548" stroke-width="4" fill="none" opacity="0.8"/>
+      <g fill="url(#blossom)">
+        <circle cx="55" cy="55" r="17"/>
+        <circle cx="95" cy="35" r="14"/>
+        <circle cx="135" cy="95" r="19"/>
+        <circle cx="175" cy="45" r="13"/>
+        <circle cx="205" cy="130" r="16"/>
+        <circle cx="245" cy="70" r="12"/>
+        <circle cx="30" cy="90" r="11"/>
+        <circle cx="270" cy="150" r="14"/>
+      </g>
+    </g>
+
+    <g transform="translate(1024,120) scale(-1,1)">
+      <path d="M 0 20 C 70 40 110 70 170 120 C 210 150 240 170 290 175" stroke="#7a5548" stroke-width="6" fill="none" opacity="0.8"/>
+      <g fill="url(#blossom)">
+        <circle cx="45" cy="45" r="13"/>
+        <circle cx="90" cy="70" r="16"/>
+        <circle cx="140" cy="110" r="12"/>
+        <circle cx="190" cy="140" r="15"/>
+        <circle cx="230" cy="160" r="11"/>
+      </g>
+    </g>
+
+    <g fill="#f3a8c9" opacity="0.7">
+      <ellipse cx="150" cy="260" rx="7" ry="10" transform="rotate(30 150 260)"/>
+      <ellipse cx="860" cy="200" rx="7" ry="10" transform="rotate(-20 860 200)"/>
+      <ellipse cx="920" cy="340" rx="6" ry="9" transform="rotate(60 920 340)"/>
+      <ellipse cx="60" cy="360" rx="6" ry="9" transform="rotate(10 60 360)"/>
+      <ellipse cx="480" cy="140" rx="6" ry="9" transform="rotate(80 480 140)"/>
+    </g>
+  </svg>
+
+  <div class="hero-content">
+    <div class="topbar">
+      <a class="brand" href="index.html">
+        <span class="mark">🌸</span>
+        <div>
+          <div class="brand-name">SMG</div>
+          <div class="brand-sub">SAKURA&nbsp;MIRAGE</div>
+        </div>
+      </a>
+      <div class="langs">
+        <span class="lang-btn" data-lang="jp">JP</span>
+        <span class="lang-btn" data-lang="en">EN</span>
+        <span class="lang-btn" data-lang="kr">KR</span>
+        <span class="lang-btn" data-lang="tr">TR</span>
+        <span class="lang-btn" data-lang="de">DE</span>
+      </div>
+    </div>
+
+    <div class="ornament"><span class="line"></span>🌸<span class="line"></span></div>
+    <h1 class="title">
+      <span class="l1">SMG</span>
+      <span class="l2">GUIDE</span>
+    </h1>
+    <p class="subtitle">Sakura Mirage Alliance</p>
+    <div class="ornament" style="margin-top:12px;"><span class="line"></span>🌸<span class="line"></span></div>
+    <p class="tagline" id="tagline">ONE PLACE FOR EVERYTHING SMG</p>
+  </div>
+</section>
+
+<div class="cards">
+  <a class="card" href="events.html">
+    <div class="icon-circle icon-events">⚔️</div>
+    <h3>EVENTS</h3>
+    <div class="jp">イベント</div>
+    <p>イベントごとのルールや<br>攻略方法を確認できます。</p>
+    <span class="cta cta-events">詳しく見る ›</span>
+  </a>
+  <a class="card" href="guides.html">
+    <div class="icon-circle icon-guides">📖</div>
+    <h3>GUIDES</h3>
+    <div class="jp">ガイド</div>
+    <p>画像を使って操作や設定を<br>わかりやすく解説します。</p>
+    <span class="cta cta-guides">詳しく見る ›</span>
+  </a>
+  <a class="card" href="videos.html">
+    <div class="icon-circle icon-videos">▶</div>
+    <h3>VIDEOS</h3>
+    <div class="jp">動画</div>
+    <p>動画でイベント攻略や<br>操作方法を学べます。</p>
+    <span class="cta cta-videos">詳しく見る ›</span>
+  </a>
+</div>
+
+<div class="notice-wrap">
+  <div class="notice">
+    <div class="bell">🔔</div>
+    <div class="notice-body" id="notice-body">
+      <h4>重要なお知らせ</h4>
+      <p>読み込み中…</p>
+    </div>
+    <a class="notice-link" href="notice.html">お知らせ一覧 ›</a>
+  </div>
+</div>
+
+<footer>
+  <h5>🌸 SMG ALLIANCE 🌸</h5>
+  <p class="en">TOGETHER WE GROW, TOGETHER WE WIN.</p>
+  <p class="copy">© Sakura Mirage Alliance. All Rights Reserved.</p>
+  <p class="copy" style="margin-top:10px;"><a href="admin.html" style="color:#fff; opacity:.7; text-decoration:underline;">管理者用:記事を投稿する</a></p>
+</footer>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  let latestNotice = null;
+
+  function renderNotice(lang) {
+    const body = document.getElementById("notice-body");
+    if (!latestNotice) {
+      body.innerHTML = "<h4>重要なお知らせ</h4><p>まだお知らせはありません。</p>";
+      return;
+    }
+    const title = SMG.v(latestNotice, "title", lang);
+    const content = SMG.excerpt(SMG.v(latestNotice, "content", lang), 60);
+    body.innerHTML = `<h4>${SMG.escapeHtml(title)}</h4><p>${SMG.escapeHtml(content)}</p>`;
+  }
+
+  async function init() {
+    const posts = await SMG.fetchPosts({ category: "NOTICE", limit: 1 });
+    latestNotice = posts[0] || null;
+    renderNotice(SMG.getLang());
+  }
+
+  SMG.initLangButtons((lang) => renderNotice(lang));
+  init();
+</script>
+
+</body>
+</html>
