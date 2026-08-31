@@ -78,7 +78,7 @@
     const youtubeUrls = SMG.toArray(post.youtube_urls);
 
     const gallery = images.length
-      ? `<div class="gallery">${images.map(src => `<img src="${SMG.escapeHtml(src)}" alt="">`).join("")}</div>`
+      ? `<div class="gallery">${images.map(src => `<a href="${SMG.escapeHtml(src)}" target="_blank" rel="noopener"><img src="${SMG.escapeHtml(src)}" alt=""></a>`).join("")}</div>`
       : "";
 
     const embeds = youtubeUrls
