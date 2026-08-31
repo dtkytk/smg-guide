@@ -27,15 +27,15 @@
       <span class="lang-btn" data-lang="de">DE</span>
     </div>
   </div>
-  <p class="page-eyebrow">📖 ガイド</p>
+  <p class="page-eyebrow">📖 <span data-i18n="eyebrow_guides">ガイド</span></p>
   <h1 class="page-title purple">GUIDES</h1>
   <p class="breadcrumb"><a href="index.html">HOME</a> ／ GUIDES</p>
 </header>
 
 <main class="page-body">
-  <a class="back-link" href="index.html">‹ トップページへ戻る</a>
+  <a class="back-link" href="index.html" data-i18n="back_to_top">‹ トップページへ戻る</a>
   <div id="list">
-    <div class="empty-state">読み込み中…</div>
+    <div class="empty-state" data-i18n="loading">読み込み中…</div>
   </div>
 </main>
 
@@ -53,7 +53,7 @@
   function render(lang) {
     const list = document.getElementById("list");
     if (!posts.length) {
-      list.innerHTML = '<div class="empty-state">まだ投稿はありません。</div>';
+      list.innerHTML = '<div class="empty-state">' + SMG.t("empty_posts", lang) + '</div>';
       return;
     }
     list.innerHTML = posts.map(p => {

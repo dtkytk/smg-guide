@@ -19,101 +19,108 @@
         <div class="brand-sub">SAKURA&nbsp;MIRAGE</div>
       </div>
     </a>
+    <div class="langs">
+      <span class="lang-btn" data-lang="jp">JP</span>
+      <span class="lang-btn" data-lang="en">EN</span>
+      <span class="lang-btn" data-lang="kr">KR</span>
+      <span class="lang-btn" data-lang="tr">TR</span>
+      <span class="lang-btn" data-lang="de">DE</span>
+    </div>
   </div>
-  <p class="page-eyebrow">🔒 管理者専用</p>
+  <p class="page-eyebrow">🔒 <span data-i18n="admin_eyebrow">管理者専用</span></p>
   <h1 class="page-title purple">POST</h1>
-  <p class="breadcrumb"><a href="index.html">HOME</a> ／ 記事投稿</p>
+  <p class="breadcrumb"><a href="index.html">HOME</a> ／ <span data-i18n="admin_breadcrumb">記事投稿</span></p>
 </header>
 
 <main class="page-body admin-wrap">
-  <a class="back-link" href="index.html">‹ トップページへ戻る</a>
-  <a class="back-link" href="manage.html" style="margin-left:16px;">記事の管理・削除はこちら ›</a>
+  <a class="back-link" href="index.html" data-i18n="back_to_top">‹ トップページへ戻る</a>
+  <a class="back-link" href="manage.html" style="margin-left:16px;" data-i18n="link_manage">記事の管理・削除はこちら ›</a>
 
   <div class="admin-card">
-    <h2>新しい記事を投稿</h2>
+    <h2 data-i18n="admin_heading">新しい記事を投稿</h2>
 
     <form id="post-form">
       <div class="field">
-        <label for="f-password">合言葉</label>
-        <input type="password" id="f-password" required placeholder="合言葉を入力">
+        <label for="f-password" data-i18n="label_password">合言葉</label>
+        <input type="password" id="f-password" required data-i18n-ph="ph_password" placeholder="合言葉を入力">
       </div>
 
       <div class="field">
-        <label for="f-category">カテゴリー</label>
+        <label for="f-category" data-i18n="label_category">カテゴリー</label>
         <select id="f-category" required>
-          <option value="EVENTS">EVENTS(イベント)</option>
-          <option value="GUIDES">GUIDES(ガイド)</option>
-          <option value="VIDEOS">VIDEOS(動画)</option>
-          <option value="NOTICE">NOTICE(お知らせ)</option>
+          <option value="EVENTS" data-i18n="opt_events">EVENTS(イベント)</option>
+          <option value="GUIDES" data-i18n="opt_guides">GUIDES(ガイド)</option>
+          <option value="VIDEOS" data-i18n="opt_videos">VIDEOS(動画)</option>
+          <option value="NOTICE" data-i18n="opt_notice">NOTICE(お知らせ)</option>
         </select>
       </div>
 
       <div class="field">
-        <label for="f-title">タイトル</label>
-        <input type="text" id="f-title" required placeholder="例: 水晶戦争 開催のお知らせ">
+        <label for="f-title" data-i18n="label_title">タイトル</label>
+        <input type="text" id="f-title" required data-i18n-ph="ph_title" placeholder="例: 水晶戦争 開催のお知らせ">
       </div>
 
       <div class="field">
-        <label for="f-content">本文</label>
-        <textarea id="f-content" required placeholder="本文を入力してください"></textarea>
+        <label for="f-content" data-i18n="label_content">本文</label>
+        <textarea id="f-content" required data-i18n-ph="ph_content" placeholder="本文を入力してください"></textarea>
       </div>
 
       <details class="field" style="border:1px solid #f0d5e4; border-radius:14px; padding:12px 14px;">
-        <summary style="cursor:pointer; font-size:.85rem; font-weight:700; color:var(--purple-deep);">翻訳を入力する(任意・空欄でもOK)</summary>
+        <summary style="cursor:pointer; font-size:.85rem; font-weight:700; color:var(--purple-deep);" data-i18n="translations_toggle">翻訳を入力する(任意・空欄でもOK)</summary>
         <div style="margin-top:14px;">
           <div class="field">
-            <label for="f-title-en">タイトル(英語)</label>
+            <label for="f-title-en" data-i18n="label_title_en">タイトル(英語)</label>
             <input type="text" id="f-title-en" placeholder="例: Crystal War Announcement">
           </div>
           <div class="field">
-            <label for="f-content-en">本文(英語)</label>
+            <label for="f-content-en" data-i18n="label_content_en">本文(英語)</label>
             <textarea id="f-content-en" placeholder="English content"></textarea>
           </div>
           <div class="field">
-            <label for="f-title-kr">タイトル(韓国語)</label>
+            <label for="f-title-kr" data-i18n="label_title_kr">タイトル(韓国語)</label>
             <input type="text" id="f-title-kr" placeholder="예: 수정 전쟁 안내">
           </div>
           <div class="field">
-            <label for="f-content-kr">本文(韓国語)</label>
+            <label for="f-content-kr" data-i18n="label_content_kr">本文(韓国語)</label>
             <textarea id="f-content-kr" placeholder="한국어 내용"></textarea>
           </div>
           <div class="field">
-            <label for="f-title-tr">タイトル(トルコ語)</label>
+            <label for="f-title-tr" data-i18n="label_title_tr">タイトル(トルコ語)</label>
             <input type="text" id="f-title-tr" placeholder="Örn: Kristal Savaşı Duyurusu">
           </div>
           <div class="field">
-            <label for="f-content-tr">本文(トルコ語)</label>
+            <label for="f-content-tr" data-i18n="label_content_tr">本文(トルコ語)</label>
             <textarea id="f-content-tr" placeholder="Türkçe içerik"></textarea>
           </div>
           <div class="field">
-            <label for="f-title-de">タイトル(ドイツ語)</label>
+            <label for="f-title-de" data-i18n="label_title_de">タイトル(ドイツ語)</label>
             <input type="text" id="f-title-de" placeholder="Z.B. Kristallkrieg-Ankündigung">
           </div>
           <div class="field" style="margin-bottom:0;">
-            <label for="f-content-de">本文(ドイツ語)</label>
+            <label for="f-content-de" data-i18n="label_content_de">本文(ドイツ語)</label>
             <textarea id="f-content-de" placeholder="Deutscher Inhalt"></textarea>
           </div>
         </div>
       </details>
 
       <div class="field">
-        <label for="f-images">画像(スマホの写真を選択、複数可)</label>
+        <label for="f-images" data-i18n="label_images">画像(スマホの写真を選択、複数可)</label>
         <input type="file" id="f-images" accept="image/*" multiple>
-        <div class="field-hint">写真を選ぶと、下にプレビューが表示されます。</div>
+        <div class="field-hint" data-i18n="hint_images">写真を選ぶと、下にプレビューが表示されます。</div>
         <div class="thumb-preview" id="thumb-preview"></div>
       </div>
 
       <div class="field">
-        <label for="f-youtube">YouTubeリンク(1行に1つ、複数可・任意)</label>
+        <label for="f-youtube" data-i18n="label_youtube">YouTubeリンク(1行に1つ、複数可・任意)</label>
         <textarea id="f-youtube" placeholder="https://www.youtube.com/watch?v=..."></textarea>
       </div>
 
       <div class="field switch-row">
         <input type="checkbox" id="f-published" checked style="width:20px;height:20px;">
-        <label for="f-published" style="margin:0;">すぐに公開する(オフにすると下書き保存)</label>
+        <label for="f-published" style="margin:0;" data-i18n="label_publish">すぐに公開する(オフにすると下書き保存)</label>
       </div>
 
-      <button type="submit" class="submit-btn" id="submit-btn">投稿する</button>
+      <button type="submit" class="submit-btn" id="submit-btn" data-i18n="submit_btn">投稿する</button>
 
       <div id="form-msg"></div>
     </form>
@@ -171,7 +178,7 @@
     if (!res.ok) {
       const errText = await res.text();
       console.error("[SMG] 画像アップロード失敗:", errText);
-      throw new Error("画像のアップロードに失敗しました");
+      throw new Error(SMG.t("msg_failed"));
     }
 
     return cfg.SUPABASE_URL.replace(/\/$/, "") + "/storage/v1/object/public/post-images/" + safeName;
@@ -180,7 +187,7 @@
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     submitBtn.disabled = true;
-    showMessage("送信中です…", "ok");
+    showMessage(SMG.t("msg_sending"), "ok");
 
     try {
       const password = document.getElementById("f-password").value;
@@ -192,7 +199,7 @@
         .split("\n").map(s => s.trim()).filter(Boolean);
 
       if (!title || !content) {
-        showMessage("タイトルと本文は必須です。", "err");
+        showMessage(SMG.t("msg_missing_fields"), "err");
         submitBtn.disabled = false;
         return;
       }
@@ -200,12 +207,12 @@
       // 画像を1枚ずつアップロード
       const imageUrls = [];
       for (const file of selectedFiles) {
-        showMessage("画像をアップロード中… (" + (imageUrls.length + 1) + "/" + selectedFiles.length + ")", "ok");
+        showMessage(SMG.t("msg_uploading") + " (" + (imageUrls.length + 1) + "/" + selectedFiles.length + ")", "ok");
         const url = await uploadImage(file);
         imageUrls.push(url);
       }
 
-      showMessage("記事を保存中…", "ok");
+      showMessage(SMG.t("msg_saving"), "ok");
 
       const payload = {
         submit_key: password,
@@ -241,26 +248,37 @@
         const errText = await res.text();
         console.error("[SMG] 投稿エラー:", errText);
         if (errText.includes("合言葉が間違っています")) {
-          showMessage("合言葉が間違っています。", "err");
+          showMessage(SMG.t("msg_wrong_password"), "err");
         } else {
-          showMessage("投稿に失敗しました。時間をおいて再度お試しください。", "err");
+          showMessage(SMG.t("msg_failed"), "err");
         }
         submitBtn.disabled = false;
         return;
       }
 
-      showMessage("投稿しました!", "ok");
+      showMessage(SMG.t("msg_success"), "ok");
       form.reset();
       selectedFiles = [];
       preview.innerHTML = "";
+      applyPlaceholders();
 
     } catch (err) {
       console.error("[SMG] エラー:", err);
-      showMessage("エラーが発生しました: " + err.message, "err");
+      showMessage("Error: " + err.message, "err");
     } finally {
       submitBtn.disabled = false;
     }
   });
+
+  // placeholder文言も選択中の言語に合わせる
+  function applyPlaceholders() {
+    document.querySelectorAll("[data-i18n-ph]").forEach(el => {
+      el.placeholder = SMG.t(el.dataset.i18nPh);
+    });
+  }
+
+  SMG.initLangButtons(() => applyPlaceholders());
+  applyPlaceholders();
 </script>
 
 </body>
