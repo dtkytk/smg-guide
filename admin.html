@@ -27,6 +27,7 @@
 
 <main class="page-body admin-wrap">
   <a class="back-link" href="index.html">‹ トップページへ戻る</a>
+  <a class="back-link" href="manage.html" style="margin-left:16px;">記事の管理・削除はこちら ›</a>
 
   <div class="admin-card">
     <h2>新しい記事を投稿</h2>
@@ -56,6 +57,44 @@
         <label for="f-content">本文</label>
         <textarea id="f-content" required placeholder="本文を入力してください"></textarea>
       </div>
+
+      <details class="field" style="border:1px solid #f0d5e4; border-radius:14px; padding:12px 14px;">
+        <summary style="cursor:pointer; font-size:.85rem; font-weight:700; color:var(--purple-deep);">翻訳を入力する(任意・空欄でもOK)</summary>
+        <div style="margin-top:14px;">
+          <div class="field">
+            <label for="f-title-en">タイトル(英語)</label>
+            <input type="text" id="f-title-en" placeholder="例: Crystal War Announcement">
+          </div>
+          <div class="field">
+            <label for="f-content-en">本文(英語)</label>
+            <textarea id="f-content-en" placeholder="English content"></textarea>
+          </div>
+          <div class="field">
+            <label for="f-title-kr">タイトル(韓国語)</label>
+            <input type="text" id="f-title-kr" placeholder="예: 수정 전쟁 안내">
+          </div>
+          <div class="field">
+            <label for="f-content-kr">本文(韓国語)</label>
+            <textarea id="f-content-kr" placeholder="한국어 내용"></textarea>
+          </div>
+          <div class="field">
+            <label for="f-title-tr">タイトル(トルコ語)</label>
+            <input type="text" id="f-title-tr" placeholder="Örn: Kristal Savaşı Duyurusu">
+          </div>
+          <div class="field">
+            <label for="f-content-tr">本文(トルコ語)</label>
+            <textarea id="f-content-tr" placeholder="Türkçe içerik"></textarea>
+          </div>
+          <div class="field">
+            <label for="f-title-de">タイトル(ドイツ語)</label>
+            <input type="text" id="f-title-de" placeholder="Z.B. Kristallkrieg-Ankündigung">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="f-content-de">本文(ドイツ語)</label>
+            <textarea id="f-content-de" placeholder="Deutscher Inhalt"></textarea>
+          </div>
+        </div>
+      </details>
 
       <div class="field">
         <label for="f-images">画像(スマホの写真を選択、複数可)</label>
@@ -173,6 +212,14 @@
         category: category,
         title: title,
         content: content,
+        title_en: document.getElementById("f-title-en").value.trim(),
+        content_en: document.getElementById("f-content-en").value.trim(),
+        title_kr: document.getElementById("f-title-kr").value.trim(),
+        content_kr: document.getElementById("f-content-kr").value.trim(),
+        title_tr: document.getElementById("f-title-tr").value.trim(),
+        content_tr: document.getElementById("f-content-tr").value.trim(),
+        title_de: document.getElementById("f-title-de").value.trim(),
+        content_de: document.getElementById("f-content-de").value.trim(),
         published: published,
         image_urls: imageUrls,
         youtube_urls: youtubeUrls
