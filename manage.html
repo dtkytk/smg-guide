@@ -52,6 +52,39 @@
     cursor:pointer;
   }
   .delete-btn:disabled{opacity:.5; cursor:not-allowed;}
+  .edit-btn{
+    flex:none;
+    padding:8px 16px;
+    border-radius:20px;
+    border:1.5px solid var(--purple-deep);
+    background:#fff;
+    color:var(--purple-deep);
+    font-size:.75rem;
+    font-weight:700;
+    cursor:pointer;
+    margin-right:8px;
+  }
+  .edit-btn:disabled{opacity:.5; cursor:not-allowed;}
+  .manage-row{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+  .edit-panel{
+    display:none;
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px dashed #f0cfe0;
+  }
+  .edit-panel.open{display:block;}
+  .edit-actions{display:flex; gap:10px; margin-top:6px;}
+  .edit-actions .submit-btn{width:auto; padding:10px 22px; font-size:.82rem;}
+  .cancel-btn{
+    padding:10px 22px;
+    border-radius:30px;
+    border:1.5px solid #ccc;
+    background:#fff;
+    color:#777;
+    font-size:.82rem;
+    font-weight:700;
+    cursor:pointer;
+  }
 </style>
 </head>
 <body>
@@ -112,27 +145,207 @@
     msgBox.className = "form-msg " + type;
   }
 
+  let postsById = {};
+
   function render(posts) {
+    postsById = {};
+    posts.forEach(p => postsById[p.id] = p);
+
     if (!posts.length) {
       list.innerHTML = '<div class="empty-state">記事がありません。</div>';
       return;
     }
     list.innerHTML = posts.map(p => `
-      <div class="manage-item" data-id="${p.id}">
-        <div class="manage-info">
-          <h3>
-            <span class="status-pill ${p.published ? "pub" : "draft"}">${p.published ? "公開中" : "下書き"}</span>
-            ${SMG.escapeHtml(p.title || "(無題)")}
-          </h3>
-          <div class="meta">${SMG.escapeHtml(p.category || "")} ・ ${SMG.formatDate(p.created_at)}</div>
+      <div class="manage-item" data-id="${p.id}" style="display:block;">
+        <div class="manage-row">
+          <div class="manage-info">
+            <h3>
+              <span class="status-pill ${p.published ? "pub" : "draft"}">${p.published ? "公開中" : "下書き"}</span>
+              ${SMG.escapeHtml(p.title || "(無題)")}
+            </h3>
+            <div class="meta">${SMG.escapeHtml(p.category || "")} ・ ${SMG.formatDate(p.created_at)}</div>
+          </div>
+          <div>
+            <button class="edit-btn" data-id="${p.id}">編集</button>
+            <button class="delete-btn" data-id="${p.id}">削除</button>
+          </div>
         </div>
-        <button class="delete-btn" data-id="${p.id}">削除</button>
+        <div class="edit-panel" id="edit-panel-${p.id}"></div>
       </div>
     `).join("");
 
     list.querySelectorAll(".delete-btn").forEach(btn => {
       btn.addEventListener("click", () => deletePost(btn.dataset.id, btn));
     });
+    list.querySelectorAll(".edit-btn").forEach(btn => {
+      btn.addEventListener("click", () => toggleEditPanel(btn.dataset.id));
+    });
+  }
+
+  function editFormHtml(p) {
+    const imgLines = SMG.toArray(p.image_urls).join("\n");
+    const ytLines = SMG.toArray(p.youtube_urls).join("\n");
+    return `
+      <div class="field">
+        <label>カテゴリー</label>
+        <select id="e-category-${p.id}">
+          ${["EVENTS","GUIDES","VIDEOS","NOTICE"].map(c => `<option value="${c}" ${p.category===c?"selected":""}>${c}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field"><label>タイトル</label><input type="text" id="e-title-${p.id}" value="${SMG.escapeHtml(p.title||"")}"></div>
+      <div class="field"><label>本文</label><textarea id="e-content-${p.id}">${SMG.escapeHtml(p.content||"")}</textarea></div>
+
+      <details class="field" style="border:1px solid #f0d5e4; border-radius:14px; padding:12px 14px;">
+        <summary style="cursor:pointer; font-size:.8rem; font-weight:700; color:var(--purple-deep);">翻訳を編集する</summary>
+        <div style="margin-top:12px;">
+          <div class="field"><label>タイトル(英語)</label><input type="text" id="e-title_en-${p.id}" value="${SMG.escapeHtml(p.title_en||"")}"></div>
+          <div class="field"><label>本文(英語)</label><textarea id="e-content_en-${p.id}">${SMG.escapeHtml(p.content_en||"")}</textarea></div>
+          <div class="field"><label>タイトル(韓国語)</label><input type="text" id="e-title_kr-${p.id}" value="${SMG.escapeHtml(p.title_kr||"")}"></div>
+          <div class="field"><label>本文(韓国語)</label><textarea id="e-content_kr-${p.id}">${SMG.escapeHtml(p.content_kr||"")}</textarea></div>
+          <div class="field"><label>タイトル(トルコ語)</label><input type="text" id="e-title_tr-${p.id}" value="${SMG.escapeHtml(p.title_tr||"")}"></div>
+          <div class="field"><label>本文(トルコ語)</label><textarea id="e-content_tr-${p.id}">${SMG.escapeHtml(p.content_tr||"")}</textarea></div>
+          <div class="field"><label>タイトル(ドイツ語)</label><input type="text" id="e-title_de-${p.id}" value="${SMG.escapeHtml(p.title_de||"")}"></div>
+          <div class="field" style="margin-bottom:0;"><label>本文(ドイツ語)</label><textarea id="e-content_de-${p.id}">${SMG.escapeHtml(p.content_de||"")}</textarea></div>
+        </div>
+      </details>
+
+      <div class="field">
+        <label>画像URL(1行に1つ)</label>
+        <textarea id="e-images-${p.id}">${SMG.escapeHtml(imgLines)}</textarea>
+        <div class="field-hint">新しい写真を追加する場合は下の欄で選んでください(既存の画像は残ります)。</div>
+        <input type="file" id="e-newimages-${p.id}" accept="image/*" multiple>
+      </div>
+
+      <div class="field">
+        <label>YouTubeリンク(1行に1つ)</label>
+        <textarea id="e-youtube-${p.id}">${SMG.escapeHtml(ytLines)}</textarea>
+      </div>
+
+      <div class="field switch-row">
+        <input type="checkbox" id="e-published-${p.id}" ${p.published ? "checked" : ""} style="width:20px;height:20px;">
+        <label for="e-published-${p.id}" style="margin:0;">公開する</label>
+      </div>
+
+      <div class="edit-actions">
+        <button type="button" class="submit-btn" id="e-save-${p.id}">保存する</button>
+        <button type="button" class="cancel-btn" id="e-cancel-${p.id}">キャンセル</button>
+      </div>
+    `;
+  }
+
+  function toggleEditPanel(id) {
+    const panel = document.getElementById("edit-panel-" + id);
+    const isOpen = panel.classList.contains("open");
+
+    // 他のパネルは閉じる
+    document.querySelectorAll(".edit-panel.open").forEach(p => {
+      p.classList.remove("open");
+      p.innerHTML = "";
+    });
+
+    if (isOpen) return;
+
+    const post = postsById[id];
+    panel.innerHTML = editFormHtml(post);
+    panel.classList.add("open");
+
+    document.getElementById("e-cancel-" + id).addEventListener("click", () => {
+      panel.classList.remove("open");
+      panel.innerHTML = "";
+    });
+    document.getElementById("e-save-" + id).addEventListener("click", () => saveEdit(id));
+  }
+
+  async function uploadImage(file) {
+    const safeName = Date.now() + "_" + Math.random().toString(36).slice(2, 8) + "_" + file.name.replace(/[^a-zA-Z0-9._-]/g, "");
+    const uploadUrl = cfg.SUPABASE_URL.replace(/\/$/, "") + "/storage/v1/object/post-images/" + safeName;
+
+    const res = await fetch(uploadUrl, {
+      method: "POST",
+      headers: {
+        apikey: cfg.SUPABASE_PUBLISHABLE_KEY,
+        Authorization: "Bearer " + cfg.SUPABASE_PUBLISHABLE_KEY,
+        "Content-Type": file.type || "application/octet-stream"
+      },
+      body: file
+    });
+
+    if (!res.ok) throw new Error("画像のアップロードに失敗しました");
+    return cfg.SUPABASE_URL.replace(/\/$/, "") + "/storage/v1/object/public/post-images/" + safeName;
+  }
+
+  async function saveEdit(id) {
+    const saveBtn = document.getElementById("e-save-" + id);
+    saveBtn.disabled = true;
+    saveBtn.textContent = "保存中…";
+    showMessage("保存中…", "ok");
+
+    try {
+      const newFilesInput = document.getElementById("e-newimages-" + id);
+      const newFiles = Array.from(newFilesInput.files || []);
+      const existingImages = document.getElementById("e-images-" + id).value
+        .split("\n").map(s => s.trim()).filter(Boolean);
+
+      const uploadedUrls = [];
+      for (const file of newFiles) {
+        uploadedUrls.push(await uploadImage(file));
+      }
+
+      const allImages = existingImages.concat(uploadedUrls);
+      const youtubeUrls = document.getElementById("e-youtube-" + id).value
+        .split("\n").map(s => s.trim()).filter(Boolean);
+
+      const body = {
+        post_id: Number(id),
+        key: currentKey,
+        p_category: document.getElementById("e-category-" + id).value,
+        p_title: document.getElementById("e-title-" + id).value.trim(),
+        p_content: document.getElementById("e-content-" + id).value.trim(),
+        p_title_en: document.getElementById("e-title_en-" + id).value.trim(),
+        p_content_en: document.getElementById("e-content_en-" + id).value.trim(),
+        p_title_kr: document.getElementById("e-title_kr-" + id).value.trim(),
+        p_content_kr: document.getElementById("e-content_kr-" + id).value.trim(),
+        p_title_tr: document.getElementById("e-title_tr-" + id).value.trim(),
+        p_content_tr: document.getElementById("e-content_tr-" + id).value.trim(),
+        p_title_de: document.getElementById("e-title_de-" + id).value.trim(),
+        p_content_de: document.getElementById("e-content_de-" + id).value.trim(),
+        p_published: document.getElementById("e-published-" + id).checked,
+        p_image_urls: allImages,
+        p_youtube_urls: youtubeUrls
+      };
+
+      const url = cfg.SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/rpc/update_post";
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          apikey: cfg.SUPABASE_PUBLISHABLE_KEY,
+          Authorization: "Bearer " + cfg.SUPABASE_PUBLISHABLE_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("[SMG] 更新エラー:", errText);
+        if (errText.includes("合言葉が間違っています")) {
+          showMessage("合言葉が間違っています。", "err");
+        } else {
+          showMessage("保存に失敗しました。", "err");
+        }
+        saveBtn.disabled = false;
+        saveBtn.textContent = "保存する";
+        return;
+      }
+
+      showMessage("保存しました!", "ok");
+      loadPosts();
+    } catch (err) {
+      console.error("[SMG] エラー:", err);
+      showMessage("エラーが発生しました: " + err.message, "err");
+      saveBtn.disabled = false;
+      saveBtn.textContent = "保存する";
+    }
   }
 
   async function loadPosts() {
