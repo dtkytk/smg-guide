@@ -188,7 +188,9 @@ const SMG = (() => {
       msg_wrong_password: "合言葉が間違っています。",
       msg_failed: "投稿に失敗しました。時間をおいて再度お試しください。",
       msg_success: "投稿しました!",
-      link_manage: "記事の管理・削除はこちら ›"
+      link_manage: "記事の管理・削除はこちら ›",
+      footer_admin_post: "管理者用:記事を投稿する",
+      footer_admin_manage: "記事の管理・削除"
     },
     en: {
       card_events_label: "Events",
@@ -248,7 +250,9 @@ const SMG = (() => {
       msg_wrong_password: "Incorrect passphrase.",
       msg_failed: "Failed to post. Please try again later.",
       msg_success: "Posted!",
-      link_manage: "Manage / delete posts ›"
+      link_manage: "Manage / delete posts ›",
+      footer_admin_post: "Admin: Post an article",
+      footer_admin_manage: "Manage / delete posts"
     },
     kr: {
       card_events_label: "이벤트",
@@ -308,7 +312,9 @@ const SMG = (() => {
       msg_wrong_password: "암호가 올바르지 않습니다.",
       msg_failed: "게시에 실패했습니다. 잠시 후 다시 시도해주세요.",
       msg_success: "게시되었습니다!",
-      link_manage: "게시물 관리·삭제 ›"
+      link_manage: "게시물 관리·삭제 ›",
+      footer_admin_post: "관리자용: 글 작성하기",
+      footer_admin_manage: "게시물 관리·삭제"
     },
     tr: {
       card_events_label: "Etkinlikler",
@@ -368,7 +374,9 @@ const SMG = (() => {
       msg_wrong_password: "Parola yanlış.",
       msg_failed: "Paylaşılamadı. Lütfen daha sonra tekrar deneyin.",
       msg_success: "Paylaşıldı!",
-      link_manage: "Gönderileri yönet / sil ›"
+      link_manage: "Gönderileri yönet / sil ›",
+      footer_admin_post: "Yönetici: Makale paylaş",
+      footer_admin_manage: "Gönderileri yönet / sil"
     },
     de: {
       card_events_label: "Events",
@@ -428,7 +436,9 @@ const SMG = (() => {
       msg_wrong_password: "Falsches Passwort.",
       msg_failed: "Veröffentlichung fehlgeschlagen. Bitte später erneut versuchen.",
       msg_success: "Veröffentlicht!",
-      link_manage: "Beiträge verwalten / löschen ›"
+      link_manage: "Beiträge verwalten / löschen ›",
+      footer_admin_post: "Admin: Artikel veröffentlichen",
+      footer_admin_manage: "Beiträge verwalten / löschen"
     }
   };
 
