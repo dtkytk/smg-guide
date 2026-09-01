@@ -127,7 +127,7 @@ const SMG = (() => {
       // TikTok(tiktok.com/@ユーザー名/video/数字)
       if (host.includes("tiktok.com")) {
         const match = u.pathname.match(/\/video\/(\d+)/);
-        return match ? { platform: "tiktok", embedUrl: "https://www.tiktok.com/embed/v2/" + match[1] } : null;
+        return match ? { platform: "tiktok", videoId: match[1], originalUrl: url } : null;
       }
 
       return null;
@@ -140,6 +140,17 @@ const SMG = (() => {
   function toYoutubeEmbed(url) {
     const result = toVideoEmbed(url);
     return result ? result.embedUrl : null;
+  }
+
+  // TikTok公式の埋め込みスクリプトを読み込む(再読み込みして、新しく追加された動画も変換させる)
+  function loadTikTokEmbeds() {
+    const existing = document.getElementById("tiktok-embed-script");
+    if (existing) existing.remove();
+    const script = document.createElement("script");
+    script.id = "tiktok-embed-script";
+    script.src = "https://www.tiktok.com/embed.js";
+    script.async = true;
+    document.body.appendChild(script);
   }
 
   function formatDate(dateStr) {
@@ -490,7 +501,7 @@ const SMG = (() => {
 
   return {
     getLang, setLang, initLangButtons, v,
-    fetchPosts, toArray, toYoutubeEmbed, toVideoEmbed,
+    fetchPosts, toArray, toYoutubeEmbed, toVideoEmbed, loadTikTokEmbeds,
     formatDate, excerpt, escapeHtml,
     t, applyUIStrings
   };

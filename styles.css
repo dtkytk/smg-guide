@@ -474,18 +474,25 @@ a{color:inherit;}
   background:#000;
   max-width:480px;
 }
-.video-embed.vertical{
-  padding-top:177.7%;
-  max-width:280px;
-  margin-left:auto;
-  margin-right:auto;
-}
 .video-embed iframe{
   position:absolute;
   inset:0;
   width:100%;
   height:100%;
   border:0;
+}
+.video-embed.tiktok-wrap{
+  padding-top:0;
+  height:auto;
+  overflow:visible;
+  background:none;
+  display:flex;
+  justify-content:center;
+}
+.video-embed.tiktok-wrap iframe{
+  position:static;
+  width:auto;
+  height:auto;
 }
 .video-card .meta{
   font-size:.68rem;

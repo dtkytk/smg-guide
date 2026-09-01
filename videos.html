@@ -65,8 +65,10 @@
             // 埋め込みに対応していないURLは、普通のリンクとして表示する
             return `<p><a href="${SMG.escapeHtml(url)}" target="_blank" rel="noopener">${SMG.escapeHtml(url)}</a></p>`;
           }
-          const verticalClass = result.platform === "tiktok" ? " vertical" : "";
-          return `<div class="video-embed${verticalClass}"><iframe src="${result.embedUrl}" title="video" allowfullscreen></iframe></div>`;
+          if (result.platform === "tiktok") {
+            return `<div class="video-embed tiktok-wrap"><blockquote class="tiktok-embed" cite="${SMG.escapeHtml(result.originalUrl)}" data-video-id="${result.videoId}" style="max-width:340px;min-width:280px;"><section></section></blockquote></div>`;
+          }
+          return `<div class="video-embed"><iframe src="${result.embedUrl}" title="video" allowfullscreen></iframe></div>`;
         })
         .join("");
 
@@ -79,6 +81,10 @@
         </div>
       `;
     }).join("");
+
+    if (list.querySelector(".tiktok-embed")) {
+      SMG.loadTikTokEmbeds();
+    }
   }
 
   async function init() {
