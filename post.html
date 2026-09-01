@@ -82,9 +82,14 @@
       : "";
 
     const embeds = youtubeUrls
-      .map(SMG.toYoutubeEmbed)
-      .filter(Boolean)
-      .map(src => `<div class="video-embed"><iframe src="${src}" title="YouTube video" allowfullscreen></iframe></div>`)
+      .map(url => {
+        const result = SMG.toVideoEmbed(url);
+        if (!result) {
+          return `<p><a href="${SMG.escapeHtml(url)}" target="_blank" rel="noopener">${SMG.escapeHtml(url)}</a></p>`;
+        }
+        const verticalClass = result.platform === "tiktok" ? " vertical" : "";
+        return `<div class="video-embed${verticalClass}"><iframe src="${result.embedUrl}" title="video" allowfullscreen></iframe></div>`;
+      })
       .join("");
 
     detail.innerHTML = `

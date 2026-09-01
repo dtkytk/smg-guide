@@ -98,22 +98,48 @@ const SMG = (() => {
     return [];
   }
 
-  // YouTube URL(watch/short/youtu.be)を embed URLに変換する
-  function toYoutubeEmbed(url) {
+  // 動画URL(YouTube/TikTok/Vimeo)を、サイト内でそのまま再生できる埋め込みURLに変換する
+  // 対応外のURLの場合は null を返す(その場合は普通のリンクとして扱う)
+  function toVideoEmbed(url) {
     try {
       const u = new URL(url);
-      let id = "";
-      if (u.hostname.includes("youtu.be")) {
-        id = u.pathname.slice(1);
-      } else if (u.searchParams.get("v")) {
-        id = u.searchParams.get("v");
-      } else if (u.pathname.includes("/shorts/")) {
-        id = u.pathname.split("/shorts/")[1];
+      const host = u.hostname.replace(/^www\./, "");
+
+      // YouTube(watch / shorts / youtu.be)
+      if (host.includes("youtube.com") || host === "youtu.be") {
+        let id = "";
+        if (host === "youtu.be") {
+          id = u.pathname.slice(1);
+        } else if (u.searchParams.get("v")) {
+          id = u.searchParams.get("v");
+        } else if (u.pathname.includes("/shorts/")) {
+          id = u.pathname.split("/shorts/")[1];
+        }
+        return id ? { platform: "youtube", embedUrl: "https://www.youtube.com/embed/" + id } : null;
       }
-      return id ? "https://www.youtube.com/embed/" + id : null;
+
+      // Vimeo(vimeo.com/数字)
+      if (host.includes("vimeo.com")) {
+        const match = u.pathname.match(/\/(\d+)/);
+        return match ? { platform: "vimeo", embedUrl: "https://player.vimeo.com/video/" + match[1] } : null;
+      }
+
+      // TikTok(tiktok.com/@ユーザー名/video/数字)
+      if (host.includes("tiktok.com")) {
+        const match = u.pathname.match(/\/video\/(\d+)/);
+        return match ? { platform: "tiktok", embedUrl: "https://www.tiktok.com/embed/v2/" + match[1] } : null;
+      }
+
+      return null;
     } catch (e) {
       return null;
     }
+  }
+
+  // 後方互換用(YouTubeだけを対象にしていた頃の呼び出し元のため)
+  function toYoutubeEmbed(url) {
+    const result = toVideoEmbed(url);
+    return result ? result.embedUrl : null;
   }
 
   function formatDate(dateStr) {
@@ -177,7 +203,7 @@ const SMG = (() => {
       label_content_de: "本文(ドイツ語)",
       label_images: "画像(スマホの写真を選択、複数可)",
       hint_images: "写真を選ぶと、下にプレビューが表示されます。",
-      label_youtube: "YouTubeリンク(1行に1つ、複数可・任意)",
+      label_youtube: "動画リンク(YouTube/TikTok/Vimeo、1行に1つ、複数可・任意)",
       ph_youtube: "https://www.youtube.com/watch?v=...",
       label_publish: "すぐに公開する(オフにすると下書き保存)",
       submit_btn: "投稿する",
@@ -239,7 +265,7 @@ const SMG = (() => {
       label_content_de: "Content (German)",
       label_images: "Images (choose photos, multiple allowed)",
       hint_images: "A preview appears below once you choose photos.",
-      label_youtube: "YouTube links (one per line, optional)",
+      label_youtube: "Video links (YouTube/TikTok/Vimeo, one per line, optional)",
       ph_youtube: "https://www.youtube.com/watch?v=...",
       label_publish: "Publish immediately (uncheck to save as draft)",
       submit_btn: "Post",
@@ -301,7 +327,7 @@ const SMG = (() => {
       label_content_de: "본문(독일어)",
       label_images: "이미지(사진 선택, 여러 장 가능)",
       hint_images: "사진을 선택하면 아래에 미리보기가 표시됩니다.",
-      label_youtube: "유튜브 링크(한 줄에 하나씩, 여러 개 가능·선택)",
+      label_youtube: "동영상 링크(YouTube/TikTok/Vimeo, 한 줄에 하나씩, 선택)",
       ph_youtube: "https://www.youtube.com/watch?v=...",
       label_publish: "즉시 공개(끄면 임시 저장)",
       submit_btn: "게시하기",
@@ -363,7 +389,7 @@ const SMG = (() => {
       label_content_de: "İçerik (Almanca)",
       label_images: "Görseller (fotoğraf seçin, birden fazla olabilir)",
       hint_images: "Fotoğraf seçtiğinizde aşağıda önizleme görünür.",
-      label_youtube: "YouTube bağlantıları (her satıra bir tane, isteğe bağlı)",
+      label_youtube: "Video bağlantıları (YouTube/TikTok/Vimeo, her satıra bir tane, isteğe bağlı)",
       ph_youtube: "https://www.youtube.com/watch?v=...",
       label_publish: "Hemen yayınla (kapatırsan taslak olarak kaydedilir)",
       submit_btn: "Paylaş",
@@ -425,7 +451,7 @@ const SMG = (() => {
       label_content_de: "Inhalt (Deutsch)",
       label_images: "Bilder (Fotos auswählen, mehrere möglich)",
       hint_images: "Nach der Auswahl erscheint unten eine Vorschau.",
-      label_youtube: "YouTube-Links (einer pro Zeile, optional)",
+      label_youtube: "Video-Links (YouTube/TikTok/Vimeo, einer pro Zeile, optional)",
       ph_youtube: "https://www.youtube.com/watch?v=...",
       label_publish: "Sofort veröffentlichen (deaktivieren = als Entwurf speichern)",
       submit_btn: "Veröffentlichen",
@@ -464,7 +490,7 @@ const SMG = (() => {
 
   return {
     getLang, setLang, initLangButtons, v,
-    fetchPosts, toArray, toYoutubeEmbed,
+    fetchPosts, toArray, toYoutubeEmbed, toVideoEmbed,
     formatDate, excerpt, escapeHtml,
     t, applyUIStrings
   };

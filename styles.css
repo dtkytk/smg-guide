@@ -472,6 +472,13 @@ a{color:inherit;}
   overflow:hidden;
   margin-bottom:12px;
   background:#000;
+  max-width:480px;
+}
+.video-embed.vertical{
+  padding-top:177.7%;
+  max-width:280px;
+  margin-left:auto;
+  margin-right:auto;
 }
 .video-embed iframe{
   position:absolute;
