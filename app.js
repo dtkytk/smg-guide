@@ -142,10 +142,15 @@ const SMG = (() => {
     return result ? result.embedUrl : null;
   }
 
-  // TikTok公式の埋め込みスクリプトを読み込む(再読み込みして、新しく追加された動画も変換させる)
+  // TikTok公式の埋め込みスクリプトを読み込む
+  // 毎回スクリプトを消して読み込み直すと、広告ブロッカー等に不審な動作として
+  // ブロックされることがあるため、一度読み込んだ後は公式APIで再描画するだけにする
   function loadTikTokEmbeds() {
-    const existing = document.getElementById("tiktok-embed-script");
-    if (existing) existing.remove();
+    if (window.tiktokEmbed && window.tiktokEmbed.lib && typeof window.tiktokEmbed.lib.render === "function") {
+      window.tiktokEmbed.lib.render(document.querySelectorAll(".tiktok-embed"));
+      return;
+    }
+    if (document.getElementById("tiktok-embed-script")) return;
     const script = document.createElement("script");
     script.id = "tiktok-embed-script";
     script.src = "https://www.tiktok.com/embed.js";
