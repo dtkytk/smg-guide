@@ -13,6 +13,22 @@ const SMG = (() => {
     localStorage.setItem(LANG_KEY, lang);
   }
 
+  // 言語選択をSupabaseに記録する(集計用、失敗しても画面には影響させない)
+  function logLangEvent(lang) {
+    if (!cfg.SUPABASE_URL || !cfg.SUPABASE_PUBLISHABLE_KEY) return;
+    const url = cfg.SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/lang_events";
+    fetch(url, {
+      method: "POST",
+      headers: {
+        apikey: cfg.SUPABASE_PUBLISHABLE_KEY,
+        Authorization: "Bearer " + cfg.SUPABASE_PUBLISHABLE_KEY,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify({ lang: lang, page: location.pathname })
+    }).catch(err => console.error("[SMG] 言語記録エラー:", err));
+  }
+
   // 言語ボタンの見た目(active)を切り替え、クリック時に onChange を呼ぶ
   // UI文言([data-i18n])は自動で反映される
   function initLangButtons(onChange) {
@@ -27,6 +43,7 @@ const SMG = (() => {
         setLang(btn.dataset.lang);
         buttons.forEach(b => b.classList.toggle("active", b === btn));
         applyUIStrings(getLang());
+        logLangEvent(btn.dataset.lang);
         if (onChange) onChange(getLang());
       });
     });

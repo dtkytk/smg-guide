@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>言語選択の統計 | SMG GUIDE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .stat-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 0;
+    border-bottom:1px solid #f5dcea;
+  }
+  .stat-row:last-child{border-bottom:none;}
+  .stat-lang{
+    width:44px;
+    font-weight:700;
+    color:var(--pink-deep);
+    font-size:.95rem;
+  }
+  .stat-bar-wrap{
+    flex:1;
+    background:#f7e6f0;
+    border-radius:10px;
+    height:20px;
+    overflow:hidden;
+  }
+  .stat-bar{
+    height:100%;
+    background:linear-gradient(90deg,#f472a8,#e8437f);
+    border-radius:10px;
+  }
+  .stat-count{
+    width:56px;
+    text-align:right;
+    font-size:.82rem;
+    color:var(--ink-soft);
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="topbar">
+    <a class="brand" href="index.html">
+      <span class="mark">🌸</span>
+      <div>
+        <div class="brand-name">SMG</div>
+        <div class="brand-sub">SAKURA&nbsp;MIRAGE</div>
+      </div>
+    </a>
+  </div>
+  <p class="page-eyebrow">🔒 管理者専用</p>
+  <h1 class="page-title purple">STATS</h1>
+  <p class="breadcrumb"><a href="index.html">HOME</a> ／ 言語選択の統計</p>
+</header>
+
+<main class="page-body admin-wrap">
+  <a class="back-link" href="admin.html">‹ 記事投稿ページへ</a>
+
+  <div class="admin-card">
+    <h2>言語選択の統計</h2>
+
+    <div class="field">
+      <label for="f-password">合言葉</label>
+      <input type="password" id="f-password" placeholder="合言葉を入力">
+    </div>
+    <button type="button" class="submit-btn" id="load-btn">集計を読み込む</button>
+    <div id="form-msg"></div>
+  </div>
+
+  <div class="admin-card" id="stats-card" style="margin-top:18px; display:none;">
+    <h2>言語ごとの選択回数</h2>
+    <div id="stats-list"></div>
+  </div>
+</main>
+
+<footer>
+  <h5>🌸 SMG ALLIANCE 🌸</h5>
+  <p class="en">TOGETHER WE GROW, TOGETHER WE WIN.</p>
+  <p class="copy">© Sakura Mirage Alliance. All Rights Reserved.</p>
+</footer>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  const cfg = window.SMG_CONFIG || {};
+  const msgBox = document.getElementById("form-msg");
+  const loadBtn = document.getElementById("load-btn");
+  const statsCard = document.getElementById("stats-card");
+  const statsList = document.getElementById("stats-list");
+
+  const LANG_LABELS = { jp: "JP 日本語", en: "EN 英語", kr: "KR 韓国語", tr: "TR トルコ語", de: "DE ドイツ語" };
+
+  function showMessage(text, type) {
+    msgBox.textContent = text;
+    msgBox.className = "form-msg " + type;
+  }
+
+  function render(rows) {
+    if (!rows.length) {
+      statsList.innerHTML = '<div class="empty-state">まだ記録がありません。</div>';
+      return;
+    }
+    const max = Math.max(...rows.map(r => Number(r.cnt)));
+    statsList.innerHTML = rows.map(r => {
+      const pct = max ? Math.round((Number(r.cnt) / max) * 100) : 0;
+      const label = LANG_LABELS[r.lang] || (r.lang || "不明");
+      return `
+        <div class="stat-row">
+          <div class="stat-lang">${SMG.escapeHtml(label)}</div>
+          <div class="stat-bar-wrap"><div class="stat-bar" style="width:${pct}%;"></div></div>
+          <div class="stat-count">${r.cnt}回</div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  async function loadStats() {
+    const password = document.getElementById("f-password").value;
+    if (!password) {
+      showMessage("合言葉を入力してください。", "err");
+      return;
+    }
+    loadBtn.disabled = true;
+    showMessage("読み込み中…", "ok");
+
+    try {
+      const url = cfg.SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/rpc/lang_stats";
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          apikey: cfg.SUPABASE_PUBLISHABLE_KEY,
+          Authorization: "Bearer " + cfg.SUPABASE_PUBLISHABLE_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ key: password })
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("[SMG] 集計取得エラー:", errText);
+        if (errText.includes("合言葉が間違っています")) {
+          showMessage("合言葉が間違っています。", "err");
+        } else {
+          showMessage("読み込みに失敗しました。", "err");
+        }
+        return;
+      }
+
+      const rows = await res.json();
+      statsCard.style.display = "block";
+      render(rows);
+      showMessage("読み込みました。", "ok");
+    } catch (err) {
+      console.error("[SMG] エラー:", err);
+      showMessage("エラーが発生しました: " + err.message, "err");
+    } finally {
+      loadBtn.disabled = false;
+    }
+  }
+
+  loadBtn.addEventListener("click", loadStats);
+</script>
+
+</body>
+</html>
