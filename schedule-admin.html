@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スケジュール投稿 | SMG GUIDE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .recur-toggle{display:flex; gap:10px; margin-bottom:6px;}
+  .recur-toggle label{
+    flex:1;
+    text-align:center;
+    padding:10px 0;
+    border-radius:12px;
+    border:1.5px solid #f0d5e4;
+    font-size:.82rem;
+    font-weight:700;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .recur-toggle input{display:none;}
+  .recur-toggle input:checked + span{color:var(--pink-deep);}
+  .recur-toggle label.active{border-color:var(--pink-deep); background:#fff0f5;}
+  .preview-wrap{
+    margin-top:26px;
+    padding-top:18px;
+    border-top:1px dashed #f0cfe0;
+  }
+  .preview-wrap h3{
+    font-family:'Cormorant Garamond', serif;
+    font-size:1.05rem;
+    color:var(--purple-deep);
+    margin:0 0 10px;
+  }
+  .preview-box{
+    background:#fffafc;
+    border:1px solid #f7e6f0;
+    border-radius:16px;
+    padding:12px;
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="topbar">
+    <a class="brand" href="index.html">
+      <span class="mark">🌸</span>
+      <div>
+        <div class="brand-name">SMG</div>
+        <div class="brand-sub">SAKURA&nbsp;MIRAGE</div>
+      </div>
+    </a>
+  </div>
+  <p class="page-eyebrow">🔒 管理者専用</p>
+  <h1 class="page-title purple">SCHEDULE</h1>
+  <p class="breadcrumb"><a href="index.html">HOME</a> ／ スケジュール投稿</p>
+</header>
+
+<main class="page-body admin-wrap">
+  <a class="back-link" href="index.html">‹ トップページへ戻る</a>
+  <a class="back-link" href="schedule-manage.html" style="margin-left:16px;">スケジュールの管理・削除はこちら ›</a>
+
+  <div class="admin-card">
+    <h2>新しいスケジュールを登録</h2>
+
+    <form id="schedule-form">
+      <div class="field">
+        <label for="f-password">合言葉</label>
+        <input type="password" id="f-password" required placeholder="合言葉を入力">
+      </div>
+
+      <div class="field">
+        <label for="f-title">イベント名</label>
+        <input type="text" id="f-title" required placeholder="例: CAGE1">
+      </div>
+
+      <details class="field" style="border:1px solid #f0d5e4; border-radius:14px; padding:12px 14px;">
+        <summary style="cursor:pointer; font-size:.85rem; font-weight:700; color:var(--purple-deep);">イベント名の翻訳(任意・空欄でもOK)</summary>
+        <div style="margin-top:14px;">
+          <div class="field"><label for="f-title-en">イベント名(英語)</label><input type="text" id="f-title-en"></div>
+          <div class="field"><label for="f-title-kr">イベント名(韓国語)</label><input type="text" id="f-title-kr"></div>
+          <div class="field"><label for="f-title-tr">イベント名(トルコ語)</label><input type="text" id="f-title-tr"></div>
+          <div class="field" style="margin-bottom:0;"><label for="f-title-de">イベント名(ドイツ語)</label><input type="text" id="f-title-de"></div>
+        </div>
+      </details>
+
+      <div class="field">
+        <label for="f-rule-label">タグ文言(任意)</label>
+        <input type="text" id="f-rule-label" placeholder="例: 65K RULE / NORMAL">
+      </div>
+
+      <div class="field">
+        <label for="f-tag-color">タグの色</label>
+        <select id="f-tag-color">
+          <option value="pink">Pink</option>
+          <option value="purple">Purple</option>
+          <option value="orange">Orange</option>
+          <option value="red">Red</option>
+          <option value="green">Green</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>繰り返し設定</label>
+        <div class="recur-toggle">
+          <label id="recur-weekly-label" class="active">
+            <input type="radio" name="f-recurrence" id="f-recurrence-weekly" value="weekly" checked>
+            <span>毎週繰り返し</span>
+          </label>
+          <label id="recur-once-label">
+            <input type="radio" name="f-recurrence" id="f-recurrence-once" value="once">
+            <span>単発(特定の日付)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field" id="field-day-of-week">
+        <label for="f-day-of-week">曜日(ST基準)</label>
+        <select id="f-day-of-week">
+          <option value="1">月曜日</option>
+          <option value="2">火曜日</option>
+          <option value="3">水曜日</option>
+          <option value="4">木曜日</option>
+          <option value="5">金曜日</option>
+          <option value="6">土曜日</option>
+          <option value="0">日曜日</option>
+        </select>
+      </div>
+
+      <div class="field" id="field-specific-date" style="display:none;">
+        <label for="f-specific-date">日付(ST基準)</label>
+        <input type="date" id="f-specific-date">
+      </div>
+
+      <div class="field">
+        <label for="f-st-time">ST(サーバー時間)開始時刻</label>
+        <input type="time" id="f-st-time" required>
+        <div class="field-hint">ここにはST(サーバー時間)のみを入力してください。他言語への表示時間は自動で変換されます。</div>
+      </div>
+
+      <div class="field">
+        <label for="f-image">イベント画像(任意・1枚)</label>
+        <input type="file" id="f-image" accept="image/*">
+        <div class="thumb-preview" id="image-preview"></div>
+      </div>
+
+      <div class="field">
+        <label for="f-note">Note(通常メモ・任意)</label>
+        <textarea id="f-note" placeholder="例: 通常ルールでの集結です"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="f-important">Important(重要事項・任意)</label>
+        <textarea id="f-important" placeholder="例: 試練席メンバーのみ集結を開始してください"></textarea>
+      </div>
+
+      <details class="field" style="border:1px solid #f0d5e4; border-radius:14px; padding:12px 14px;">
+        <summary style="cursor:pointer; font-size:.85rem; font-weight:700; color:var(--purple-deep);">Note / Important の翻訳(任意)</summary>
+        <div style="margin-top:14px;">
+          <div class="field"><label for="f-note-en">Note(英語)</label><textarea id="f-note-en"></textarea></div>
+          <div class="field"><label for="f-important-en">Important(英語)</label><textarea id="f-important-en"></textarea></div>
+          <div class="field"><label for="f-note-kr">Note(韓国語)</label><textarea id="f-note-kr"></textarea></div>
+          <div class="field"><label for="f-important-kr">Important(韓国語)</label><textarea id="f-important-kr"></textarea></div>
+          <div class="field"><label for="f-note-tr">Note(トルコ語)</label><textarea id="f-note-tr"></textarea></div>
+          <div class="field"><label for="f-important-tr">Important(トルコ語)</label><textarea id="f-important-tr"></textarea></div>
+          <div class="field"><label for="f-note-de">Note(ドイツ語)</label><textarea id="f-note-de"></textarea></div>
+          <div class="field" style="margin-bottom:0;"><label for="f-important-de">Important(ドイツ語)</label><textarea id="f-important-de"></textarea></div>
+        </div>
+      </details>
+
+      <div class="field">
+        <label for="f-link-post">既存記事へのリンク(任意)</label>
+        <select id="f-link-post">
+          <option value="">リンクなし</option>
+        </select>
+      </div>
+
+      <div class="field switch-row">
+        <input type="checkbox" id="f-published" checked style="width:20px;height:20px;">
+        <label for="f-published" style="margin:0;">すぐに公開する(オフにすると下書き保存)</label>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submit-btn">登録する</button>
+      <div id="form-msg"></div>
+    </form>
+
+    <div class="preview-wrap">
+      <h3>TODAYではこう表示されます</h3>
+      <div class="preview-box" id="preview-box"></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <h5>🌸 SMG ALLIANCE 🌸</h5>
+  <p class="en">TOGETHER WE GROW, TOGETHER WE WIN.</p>
+  <p class="copy">© Sakura Mirage Alliance. All Rights Reserved.</p>
+</footer>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  const cfg = window.SMG_CONFIG || {};
+  const form = document.getElementById("schedule-form");
+  const submitBtn = document.getElementById("submit-btn");
+  const msgBox = document.getElementById("form-msg");
+  const imageInput = document.getElementById("f-image");
+  const imagePreview = document.getElementById("image-preview");
+  let selectedImageFile = null;
+
+  function showMessage(text, type) {
+    msgBox.textContent = text;
+    msgBox.className = "form-msg " + type;
+  }
+
+  // ----- 繰り返し設定の切り替え -----
+  const weeklyRadio = document.getElementById("f-recurrence-weekly");
+  const onceRadio = document.getElementById("f-recurrence-once");
+  const dayOfWeekField = document.getElementById("field-day-of-week");
+  const specificDateField = document.getElementById("field-specific-date");
+  const weeklyLabel = document.getElementById("recur-weekly-label");
+  const onceLabel = document.getElementById("recur-once-label");
+
+  function updateRecurrenceUI() {
+    const isWeekly = weeklyRadio.checked;
+    dayOfWeekField.style.display = isWeekly ? "" : "none";
+    specificDateField.style.display = isWeekly ? "none" : "";
+    weeklyLabel.classList.toggle("active", isWeekly);
+    onceLabel.classList.toggle("active", !isWeekly);
+    renderPreview();
+  }
+  weeklyRadio.addEventListener("change", updateRecurrenceUI);
+  onceRadio.addEventListener("change", updateRecurrenceUI);
+
+  // ----- 画像プレビュー -----
+  imageInput.addEventListener("change", () => {
+    selectedImageFile = imageInput.files && imageInput.files[0] ? imageInput.files[0] : null;
+    imagePreview.innerHTML = "";
+    if (selectedImageFile) {
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(selectedImageFile);
+      imagePreview.appendChild(img);
+    }
+    renderPreview();
+  });
+
+  // ----- 既存記事リンク選択肢の読み込み -----
+  async function loadLinkOptions() {
+    const [events, guides] = await Promise.all([
+      SMG.fetchPosts({ category: "EVENTS" }),
+      SMG.fetchPosts({ category: "GUIDES" })
+    ]);
+    const select = document.getElementById("f-link-post");
+    [...events, ...guides].forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = `[${p.category}] ${p.title}`;
+      select.appendChild(opt);
+    });
+    select.addEventListener("change", renderPreview);
+  }
+
+  // ----- プレビュー -----
+  function buildPreviewSchedule() {
+    const isWeekly = weeklyRadio.checked;
+    const stToday = SMG.getSTDate(0).dateStr;
+    const specificDate = document.getElementById("f-specific-date").value || stToday;
+
+    return {
+      id: "preview",
+      title: document.getElementById("f-title").value || "(イベント名)",
+      title_en: document.getElementById("f-title-en").value,
+      title_kr: document.getElementById("f-title-kr").value,
+      title_tr: document.getElementById("f-title-tr").value,
+      title_de: document.getElementById("f-title-de").value,
+      rule_label: document.getElementById("f-rule-label").value,
+      tag_color: document.getElementById("f-tag-color").value,
+      image_url: selectedImageFile ? URL.createObjectURL(selectedImageFile) : "",
+      recurrence_type: isWeekly ? "weekly" : "once",
+      specific_date: isWeekly ? null : specificDate,
+      st_time: (document.getElementById("f-st-time").value || "00:00") + ":00",
+      _occurrenceDate: isWeekly ? stToday : specificDate,
+      note_text: document.getElementById("f-note").value,
+      note_text_en: document.getElementById("f-note-en").value,
+      note_text_kr: document.getElementById("f-note-kr").value,
+      note_text_tr: document.getElementById("f-note-tr").value,
+      note_text_de: document.getElementById("f-note-de").value,
+      important_text: document.getElementById("f-important").value,
+      important_text_en: document.getElementById("f-important-en").value,
+      important_text_kr: document.getElementById("f-important-kr").value,
+      important_text_tr: document.getElementById("f-important-tr").value,
+      important_text_de: document.getElementById("f-important-de").value,
+      link_post_id: document.getElementById("f-link-post").value || null
+    };
+  }
+
+  function renderPreview() {
+    const schedule = buildPreviewSchedule();
+    document.getElementById("preview-box").innerHTML = SMG.renderEventRow(schedule, SMG.getLang(), false);
+  }
+
+  form.addEventListener("input", renderPreview);
+  form.addEventListener("change", renderPreview);
+
+  // ----- 画像アップロード -----
+  async function uploadImage(file) {
+    const safeName = Date.now() + "_" + Math.random().toString(36).slice(2, 8) + "_" + file.name.replace(/[^a-zA-Z0-9._-]/g, "");
+    const uploadUrl = cfg.SUPABASE_URL.replace(/\/$/, "") + "/storage/v1/object/post-images/" + safeName;
+
+    const res = await fetch(uploadUrl, {
+      method: "POST",
+      headers: {
+        apikey: cfg.SUPABASE_PUBLISHABLE_KEY,
+        Authorization: "Bearer " + cfg.SUPABASE_PUBLISHABLE_KEY,
+        "Content-Type": file.type || "application/octet-stream"
+      },
+      body: file
+    });
+
+    if (!res.ok) {
+      console.error("[SMG] 画像アップロード失敗:", await res.text());
+      throw new Error("画像のアップロードに失敗しました");
+    }
+    return cfg.SUPABASE_URL.replace(/\/$/, "") + "/storage/v1/object/public/post-images/" + safeName;
+  }
+
+  // ----- 送信 -----
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    showMessage("送信中です…", "ok");
+
+    try {
+      const isWeekly = weeklyRadio.checked;
+      const title = document.getElementById("f-title").value.trim();
+      const stTime = document.getElementById("f-st-time").value;
+
+      if (!title || !stTime) {
+        showMessage("イベント名とST開始時刻は必須です。", "err");
+        submitBtn.disabled = false;
+        return;
+      }
+      if (!isWeekly && !document.getElementById("f-specific-date").value) {
+        showMessage("単発イベントの場合は日付を指定してください。", "err");
+        submitBtn.disabled = false;
+        return;
+      }
+
+      let imageUrl = "";
+      if (selectedImageFile) {
+        showMessage("画像をアップロード中…", "ok");
+        imageUrl = await uploadImage(selectedImageFile);
+      }
+
+      showMessage("スケジュールを保存中…", "ok");
+
+      const linkPostId = document.getElementById("f-link-post").value;
+
+      const payload = {
+        key: document.getElementById("f-password").value,
+        p_title: title,
+        p_title_en: document.getElementById("f-title-en").value.trim(),
+        p_title_kr: document.getElementById("f-title-kr").value.trim(),
+        p_title_tr: document.getElementById("f-title-tr").value.trim(),
+        p_title_de: document.getElementById("f-title-de").value.trim(),
+        p_rule_label: document.getElementById("f-rule-label").value.trim(),
+        p_tag_color: document.getElementById("f-tag-color").value,
+        p_image_url: imageUrl,
+        p_recurrence_type: isWeekly ? "weekly" : "once",
+        p_day_of_week: isWeekly ? Number(document.getElementById("f-day-of-week").value) : null,
+        p_specific_date: isWeekly ? null : document.getElementById("f-specific-date").value,
+        p_st_time: stTime,
+        p_note_text: document.getElementById("f-note").value.trim(),
+        p_note_text_en: document.getElementById("f-note-en").value.trim(),
+        p_note_text_kr: document.getElementById("f-note-kr").value.trim(),
+        p_note_text_tr: document.getElementById("f-note-tr").value.trim(),
+        p_note_text_de: document.getElementById("f-note-de").value.trim(),
+        p_important_text: document.getElementById("f-important").value.trim(),
+        p_important_text_en: document.getElementById("f-important-en").value.trim(),
+        p_important_text_kr: document.getElementById("f-important-kr").value.trim(),
+        p_important_text_tr: document.getElementById("f-important-tr").value.trim(),
+        p_important_text_de: document.getElementById("f-important-de").value.trim(),
+        p_link_post_id: linkPostId ? Number(linkPostId) : null,
+        p_published: document.getElementById("f-published").checked
+      };
+
+      const url = cfg.SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/rpc/create_schedule";
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          apikey: cfg.SUPABASE_PUBLISHABLE_KEY,
+          Authorization: "Bearer " + cfg.SUPABASE_PUBLISHABLE_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("[SMG] スケジュール登録エラー:", errText);
+        if (errText.includes("合言葉が間違っています")) {
+          showMessage("合言葉が間違っています。", "err");
+        } else {
+          showMessage("登録に失敗しました。時間をおいて再度お試しください。", "err");
+        }
+        submitBtn.disabled = false;
+        return;
+      }
+
+      showMessage("登録しました!", "ok");
+      form.reset();
+      selectedImageFile = null;
+      imagePreview.innerHTML = "";
+      updateRecurrenceUI();
+      renderPreview();
+
+    } catch (err) {
+      console.error("[SMG] エラー:", err);
+      showMessage("エラーが発生しました: " + err.message, "err");
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  loadLinkOptions();
+  updateRecurrenceUI();
+  renderPreview();
+</script>
+
+</body>
+</html>
