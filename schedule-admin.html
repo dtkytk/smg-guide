@@ -23,6 +23,23 @@
   .recur-toggle input{display:none;}
   .recur-toggle input:checked + span{color:var(--pink-deep);}
   .recur-toggle label.active{border-color:var(--pink-deep); background:#fff0f5;}
+  .day-checks{display:flex; flex-wrap:wrap; gap:8px;}
+  .day-checks label{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    padding:8px 12px;
+    border-radius:10px;
+    border:1.5px solid #f0d5e4;
+    font-size:.8rem;
+    font-weight:700;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .day-checks input{width:15px; height:15px; margin:0;}
+  .day-checks label.active{border-color:var(--pink-deep); background:#fff0f5; color:var(--pink-deep);}
+  .interval-row{display:flex; align-items:center; gap:8px;}
+  .interval-row input[type="number"]{width:80px;}
   .preview-wrap{
     margin-top:26px;
     padding-top:18px;
@@ -110,6 +127,10 @@
             <input type="radio" name="f-recurrence" id="f-recurrence-weekly" value="weekly" checked>
             <span>毎週繰り返し</span>
           </label>
+          <label id="recur-interval-label">
+            <input type="radio" name="f-recurrence" id="f-recurrence-interval" value="interval">
+            <span>間隔繰り返し</span>
+          </label>
           <label id="recur-once-label">
             <input type="radio" name="f-recurrence" id="f-recurrence-once" value="once">
             <span>単発(特定の日付)</span>
@@ -118,16 +139,28 @@
       </div>
 
       <div class="field" id="field-day-of-week">
-        <label for="f-day-of-week">曜日(ST基準)</label>
-        <select id="f-day-of-week">
-          <option value="1">月曜日</option>
-          <option value="2">火曜日</option>
-          <option value="3">水曜日</option>
-          <option value="4">木曜日</option>
-          <option value="5">金曜日</option>
-          <option value="6">土曜日</option>
-          <option value="0">日曜日</option>
-        </select>
+        <label>曜日(ST基準・複数選択可)</label>
+        <div class="day-checks">
+          <label><input type="checkbox" class="f-day" value="1"><span>月</span></label>
+          <label><input type="checkbox" class="f-day" value="2"><span>火</span></label>
+          <label><input type="checkbox" class="f-day" value="3"><span>水</span></label>
+          <label><input type="checkbox" class="f-day" value="4"><span>木</span></label>
+          <label><input type="checkbox" class="f-day" value="5"><span>金</span></label>
+          <label><input type="checkbox" class="f-day" value="6"><span>土</span></label>
+          <label><input type="checkbox" class="f-day" value="0"><span>日</span></label>
+        </div>
+      </div>
+
+      <div class="field" id="field-interval" style="display:none;">
+        <label>間隔繰り返し(ST基準)</label>
+        <div class="interval-row">
+          <span>開始日</span>
+          <input type="date" id="f-start-date">
+          <span>から</span>
+          <input type="number" id="f-interval-days" min="1" value="2">
+          <span>日ごと</span>
+        </div>
+        <div class="field-hint">例: 開始日 9/1、2日ごと → 9/1, 9/3, 9/5…に開催</div>
       </div>
 
       <div class="field" id="field-specific-date" style="display:none;">
@@ -216,24 +249,48 @@
     msgBox.className = "form-msg " + type;
   }
 
-  // ----- 繰り返し設定の切り替え -----
+  // ----- 繰り返し設定の切り替え(weekly / interval / once) -----
   const weeklyRadio = document.getElementById("f-recurrence-weekly");
+  const intervalRadio = document.getElementById("f-recurrence-interval");
   const onceRadio = document.getElementById("f-recurrence-once");
   const dayOfWeekField = document.getElementById("field-day-of-week");
+  const intervalField = document.getElementById("field-interval");
   const specificDateField = document.getElementById("field-specific-date");
   const weeklyLabel = document.getElementById("recur-weekly-label");
+  const intervalLabel = document.getElementById("recur-interval-label");
   const onceLabel = document.getElementById("recur-once-label");
+  const dayCheckboxes = Array.from(document.querySelectorAll(".f-day"));
+
+  function currentRecurrence() {
+    if (weeklyRadio.checked) return "weekly";
+    if (intervalRadio.checked) return "interval";
+    return "once";
+  }
 
   function updateRecurrenceUI() {
-    const isWeekly = weeklyRadio.checked;
-    dayOfWeekField.style.display = isWeekly ? "" : "none";
-    specificDateField.style.display = isWeekly ? "none" : "";
-    weeklyLabel.classList.toggle("active", isWeekly);
-    onceLabel.classList.toggle("active", !isWeekly);
+    const type = currentRecurrence();
+    dayOfWeekField.style.display = type === "weekly" ? "" : "none";
+    intervalField.style.display = type === "interval" ? "" : "none";
+    specificDateField.style.display = type === "once" ? "" : "none";
+    weeklyLabel.classList.toggle("active", type === "weekly");
+    intervalLabel.classList.toggle("active", type === "interval");
+    onceLabel.classList.toggle("active", type === "once");
     renderPreview();
   }
   weeklyRadio.addEventListener("change", updateRecurrenceUI);
+  intervalRadio.addEventListener("change", updateRecurrenceUI);
   onceRadio.addEventListener("change", updateRecurrenceUI);
+
+  dayCheckboxes.forEach(cb => {
+    cb.addEventListener("change", () => {
+      cb.closest("label").classList.toggle("active", cb.checked);
+      renderPreview();
+    });
+  });
+
+  function getSelectedDays() {
+    return dayCheckboxes.filter(cb => cb.checked).map(cb => Number(cb.value));
+  }
 
   // ----- 画像プレビュー -----
   imageInput.addEventListener("change", () => {
@@ -265,9 +322,11 @@
 
   // ----- プレビュー -----
   function buildPreviewSchedule() {
-    const isWeekly = weeklyRadio.checked;
+    const type = currentRecurrence();
     const stToday = SMG.getSTDate(0).dateStr;
     const specificDate = document.getElementById("f-specific-date").value || stToday;
+    const startDate = document.getElementById("f-start-date").value || stToday;
+    const occurrenceDate = type === "once" ? specificDate : (type === "interval" ? startDate : stToday);
 
     return {
       id: "preview",
@@ -279,10 +338,13 @@
       rule_label: document.getElementById("f-rule-label").value,
       tag_color: document.getElementById("f-tag-color").value,
       image_url: selectedImageFile ? URL.createObjectURL(selectedImageFile) : "",
-      recurrence_type: isWeekly ? "weekly" : "once",
-      specific_date: isWeekly ? null : specificDate,
+      recurrence_type: type,
+      day_of_week: type === "weekly" ? getSelectedDays() : null,
+      interval_days: type === "interval" ? Number(document.getElementById("f-interval-days").value || 0) : null,
+      start_date: type === "interval" ? startDate : null,
+      specific_date: type === "once" ? specificDate : null,
       st_time: (document.getElementById("f-st-time").value || "00:00") + ":00",
-      _occurrenceDate: isWeekly ? stToday : specificDate,
+      _occurrenceDate: occurrenceDate,
       note_text: document.getElementById("f-note").value,
       note_text_en: document.getElementById("f-note-en").value,
       note_text_kr: document.getElementById("f-note-kr").value,
@@ -334,7 +396,7 @@
     showMessage("送信中です…", "ok");
 
     try {
-      const isWeekly = weeklyRadio.checked;
+      const type = currentRecurrence();
       const title = document.getElementById("f-title").value.trim();
       const stTime = document.getElementById("f-st-time").value;
 
@@ -343,7 +405,21 @@
         submitBtn.disabled = false;
         return;
       }
-      if (!isWeekly && !document.getElementById("f-specific-date").value) {
+      if (type === "weekly" && getSelectedDays().length === 0) {
+        showMessage("毎週繰り返しの場合は曜日を1つ以上選択してください。", "err");
+        submitBtn.disabled = false;
+        return;
+      }
+      if (type === "interval") {
+        const startDateVal = document.getElementById("f-start-date").value;
+        const intervalDaysVal = Number(document.getElementById("f-interval-days").value || 0);
+        if (!startDateVal || intervalDaysVal < 1) {
+          showMessage("間隔繰り返しの場合は開始日と間隔日数を指定してください。", "err");
+          submitBtn.disabled = false;
+          return;
+        }
+      }
+      if (type === "once" && !document.getElementById("f-specific-date").value) {
         showMessage("単発イベントの場合は日付を指定してください。", "err");
         submitBtn.disabled = false;
         return;
@@ -369,9 +445,11 @@
         p_rule_label: document.getElementById("f-rule-label").value.trim(),
         p_tag_color: document.getElementById("f-tag-color").value,
         p_image_url: imageUrl,
-        p_recurrence_type: isWeekly ? "weekly" : "once",
-        p_day_of_week: isWeekly ? Number(document.getElementById("f-day-of-week").value) : null,
-        p_specific_date: isWeekly ? null : document.getElementById("f-specific-date").value,
+        p_recurrence_type: type,
+        p_day_of_week: type === "weekly" ? getSelectedDays() : null,
+        p_interval_days: type === "interval" ? Number(document.getElementById("f-interval-days").value) : null,
+        p_start_date: type === "interval" ? document.getElementById("f-start-date").value : null,
+        p_specific_date: type === "once" ? document.getElementById("f-specific-date").value : null,
         p_st_time: stTime,
         p_note_text: document.getElementById("f-note").value.trim(),
         p_note_text_en: document.getElementById("f-note-en").value.trim(),
@@ -414,6 +492,7 @@
       form.reset();
       selectedImageFile = null;
       imagePreview.innerHTML = "";
+      dayCheckboxes.forEach(cb => cb.closest("label").classList.remove("active"));
       updateRecurrenceUI();
       renderPreview();
 

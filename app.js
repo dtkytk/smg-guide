@@ -732,10 +732,20 @@ const SMG = (() => {
     return `${escapeHtml(stLabel)} | ${escapeHtml(langLabel)}${badge}`;
   }
 
-  // scheduleが指定のST日付・曜日に該当するか(weekly / once 両対応)
+  // scheduleが指定のST日付・曜日に該当するか(weekly / interval / once の3種対応)
   function scheduleMatchesDate(schedule, dateStr, weekday) {
-    if (schedule.recurrence_type === "once") return schedule.specific_date === dateStr;
-    return schedule.day_of_week === weekday;
+    if (schedule.recurrence_type === "once") {
+      return schedule.specific_date === dateStr;
+    }
+    if (schedule.recurrence_type === "interval") {
+      if (!schedule.start_date || !schedule.interval_days) return false;
+      const diffDays = Math.round(
+        (Date.parse(dateStr + "T00:00:00Z") - Date.parse(schedule.start_date + "T00:00:00Z")) / 86400000
+      );
+      return diffDays >= 0 && diffDays % schedule.interval_days === 0;
+    }
+    // weekly: day_of_week は複数曜日を持てる配列(例: [1,4] = 月・木)
+    return Array.isArray(schedule.day_of_week) && schedule.day_of_week.includes(weekday);
   }
 
   // 今日(ST基準)該当するスケジュールを時刻順で返す
