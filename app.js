@@ -249,7 +249,18 @@ const SMG = (() => {
       msg_success: "投稿しました!",
       link_manage: "記事の管理・削除はこちら ›",
       footer_admin_post: "管理者用:記事を投稿する",
-      footer_admin_manage: "記事の管理・削除"
+      footer_admin_manage: "記事の管理・削除",
+      today_title: "TODAY",
+      today_subtitle: "今日のイベント",
+      today_empty: "本日開催予定のイベントはありません。",
+      today_notice_heading: "最新のお知らせ",
+      today_notice_more: "すべて見る ›",
+      today_detail_link: "詳細を見る ›",
+      this_week_title: "THIS WEEK",
+      this_week_subtitle: "今週の予定",
+      week_no_events: "予定なし",
+      day_offset_plus: "+1日",
+      day_offset_minus: "前日"
     },
     en: {
       card_events_label: "Events",
@@ -311,7 +322,18 @@ const SMG = (() => {
       msg_success: "Posted!",
       link_manage: "Manage / delete posts ›",
       footer_admin_post: "Admin: Post an article",
-      footer_admin_manage: "Manage / delete posts"
+      footer_admin_manage: "Manage / delete posts",
+      today_title: "TODAY",
+      today_subtitle: "Today's Events",
+      today_empty: "No events scheduled today.",
+      today_notice_heading: "Latest Notice",
+      today_notice_more: "See all ›",
+      today_detail_link: "View details ›",
+      this_week_title: "THIS WEEK",
+      this_week_subtitle: "This Week's Schedule",
+      week_no_events: "No Events",
+      day_offset_plus: "+1 day",
+      day_offset_minus: "-1 day"
     },
     kr: {
       card_events_label: "이벤트",
@@ -373,7 +395,18 @@ const SMG = (() => {
       msg_success: "게시되었습니다!",
       link_manage: "게시물 관리·삭제 ›",
       footer_admin_post: "관리자용: 글 작성하기",
-      footer_admin_manage: "게시물 관리·삭제"
+      footer_admin_manage: "게시물 관리·삭제",
+      today_title: "TODAY",
+      today_subtitle: "오늘의 이벤트",
+      today_empty: "오늘 예정된 이벤트가 없습니다.",
+      today_notice_heading: "최신 공지",
+      today_notice_more: "전체 보기 ›",
+      today_detail_link: "자세히 보기 ›",
+      this_week_title: "THIS WEEK",
+      this_week_subtitle: "이번 주 일정",
+      week_no_events: "일정 없음",
+      day_offset_plus: "+1일",
+      day_offset_minus: "-1일"
     },
     tr: {
       card_events_label: "Etkinlikler",
@@ -435,7 +468,18 @@ const SMG = (() => {
       msg_success: "Paylaşıldı!",
       link_manage: "Gönderileri yönet / sil ›",
       footer_admin_post: "Yönetici: Makale paylaş",
-      footer_admin_manage: "Gönderileri yönet / sil"
+      footer_admin_manage: "Gönderileri yönet / sil",
+      today_title: "TODAY",
+      today_subtitle: "Bugünkü Etkinlikler",
+      today_empty: "Bugün planlanmış etkinlik yok.",
+      today_notice_heading: "Son Duyuru",
+      today_notice_more: "Tümünü gör ›",
+      today_detail_link: "Detayları gör ›",
+      this_week_title: "THIS WEEK",
+      this_week_subtitle: "Bu Haftaki Program",
+      week_no_events: "Etkinlik yok",
+      day_offset_plus: "+1 gün",
+      day_offset_minus: "-1 gün"
     },
     de: {
       card_events_label: "Events",
@@ -497,7 +541,18 @@ const SMG = (() => {
       msg_success: "Veröffentlicht!",
       link_manage: "Beiträge verwalten / löschen ›",
       footer_admin_post: "Admin: Artikel veröffentlichen",
-      footer_admin_manage: "Beiträge verwalten / löschen"
+      footer_admin_manage: "Beiträge verwalten / löschen",
+      today_title: "TODAY",
+      today_subtitle: "Heutige Events",
+      today_empty: "Heute sind keine Events geplant.",
+      today_notice_heading: "Neueste Ankündigung",
+      today_notice_more: "Alle ansehen ›",
+      today_detail_link: "Details ansehen ›",
+      this_week_title: "THIS WEEK",
+      this_week_subtitle: "Diese Woche",
+      week_no_events: "Keine Events",
+      day_offset_plus: "+1 Tag",
+      day_offset_minus: "-1 Tag"
     }
   };
 
@@ -521,10 +576,263 @@ const SMG = (() => {
       .replace(/>/g, "&gt;");
   }
 
+  // ===================================================================
+  // ===== TODAY / THIS WEEK / SCHEDULE MANAGER 共通処理 =====
+  // schedules テーブルを読み込み、ST(サーバー時間)を基準に「今日」「今週」を
+  // 算出し、選択言語のタイムゾーンへ変換する。index.html / schedule-admin.html /
+  // schedule-manage.html がすべてこの関数群を共有する。
+  // UI文言は上のUI_STRINGS/t()をそのまま利用し、既存の多言語システムと連動させる。
+  // ===================================================================
+
+  const ST_TIMEZONE = cfg.ST_TIMEZONE || "UTC";
+
+  const LANG_TIMEZONE = {
+    jp: "Asia/Tokyo",
+    kr: "Asia/Seoul",
+    tr: "Europe/Istanbul",
+    de: "Europe/Berlin",
+    en: null // null = 変換せずSTのまま表示
+  };
+
+  // 曜日・月名はUI_STRINGSではなく日付書式専用の小さな辞書として保持する
+  const WEEKDAY_SHORT = {
+    jp: ["日", "月", "火", "水", "木", "金", "土"],
+    en: ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"],
+    kr: ["일", "월", "화", "수", "목", "금", "토"],
+    tr: ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"],
+    de: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"]
+  };
+  const WEEKDAY_FULL = {
+    jp: ["日曜日","月曜日","火曜日","水曜日","木曜日","金曜日","土曜日"],
+    en: ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+    kr: ["일요일","월요일","화요일","수요일","목요일","금요일","토요일"],
+    tr: ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"],
+    de: ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"]
+  };
+  const MONTH_EN = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  // schedulesテーブルを取得する(公開分のみがデフォルト)
+  async function fetchSchedules({ published = true } = {}) {
+    if (!cfg.SUPABASE_URL || !cfg.SUPABASE_PUBLISHABLE_KEY) {
+      console.error("config.js が正しく読み込まれていません(SUPABASE_URL / KEY が空です)");
+      return [];
+    }
+
+    let url = cfg.SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/schedules?select=*";
+    if (published) url += "&published=eq.true";
+    url += "&order=st_time.asc";
+
+    try {
+      const res = await fetch(url, {
+        headers: {
+          apikey: cfg.SUPABASE_PUBLISHABLE_KEY,
+          Authorization: "Bearer " + cfg.SUPABASE_PUBLISHABLE_KEY
+        }
+      });
+      if (!res.ok) {
+        console.error("[SMG] schedules取得エラー:", await res.text());
+        return [];
+      }
+      return await res.json();
+    } catch (err) {
+      console.error("[SMG] schedules通信エラー:", err);
+      return [];
+    }
+  }
+
+  // "YYYY-MM-DD" + "HH:MM" を timeZone の壁時計として解釈し、UTCのDateを返す
+  function wallTimeInZoneToUTC(dateStr, timeStr, timeZone) {
+    const [y, mo, d] = dateStr.split("-").map(Number);
+    const [h, mi] = timeStr.split(":").map(Number);
+
+    let guess = new Date(Date.UTC(y, mo - 1, d, h, mi));
+
+    // 仮のUTC瞬間をtimeZoneで書式化し直し、実際のオフセットとのズレを2回補正する
+    // (DST切り替え日をまたぐ場合でも収束するように2回繰り返す)
+    for (let i = 0; i < 2; i++) {
+      const map = formatPartsInZone(guess, timeZone);
+      const asUTC = Date.UTC(
+        Number(map.year), Number(map.month) - 1, Number(map.day),
+        Number(map.hour === "24" ? "0" : map.hour), Number(map.minute)
+      );
+      const diff = Date.UTC(y, mo - 1, d, h, mi) - asUTC;
+      guess = new Date(guess.getTime() + diff);
+    }
+    return guess;
+  }
+
+  function formatPartsInZone(date, timeZone) {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hour12: false
+    }).formatToParts(date);
+    const map = {};
+    parts.forEach(p => map[p.type] = p.value);
+    return map;
+  }
+
+  // ST_TIMEZONE基準の「今日から offsetDays 日後」の日付・曜日を返す
+  function getSTDate(offsetDays = 0) {
+    const now = new Date(Date.now() + offsetDays * 86400000);
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: ST_TIMEZONE,
+      year: "numeric", month: "2-digit", day: "2-digit", weekday: "short"
+    }).formatToParts(now);
+    const map = {};
+    parts.forEach(p => map[p.type] = p.value);
+    const weekdayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+
+    return {
+      dateStr: `${map.year}-${map.month}-${map.day}`,
+      weekday: weekdayMap[map.weekday]
+    };
+  }
+
+  // ST_TIMEZONE基準の現在時刻("HH:MM")
+  function getSTNowTime() {
+    const map = formatPartsInZone(new Date(), ST_TIMEZONE);
+    return `${map.hour}:${map.minute}`;
+  }
+
+  // ST壁時計(stDateStr, stTimeStr)を、指定言語のタイムゾーンへ変換する
+  // 戻り値: { dateStr, timeStr, dayOffset }  dayOffsetはSTの日付との差(-1/0/+1)
+  function convertSTtoLang(stDateStr, stTimeStr, lang) {
+    const targetZone = LANG_TIMEZONE[lang];
+    if (!targetZone) {
+      return { dateStr: stDateStr, timeStr: stTimeStr, dayOffset: 0 };
+    }
+
+    const utcInstant = wallTimeInZoneToUTC(stDateStr, stTimeStr, ST_TIMEZONE);
+    const map = formatPartsInZone(utcInstant, targetZone);
+    const resultDateStr = `${map.year}-${map.month}-${map.day}`;
+    const resultTimeStr = `${map.hour}:${map.minute}`;
+
+    const dayOffset = Math.round(
+      (Date.parse(resultDateStr + "T00:00:00Z") - Date.parse(stDateStr + "T00:00:00Z")) / 86400000
+    );
+
+    return { dateStr: resultDateStr, timeStr: resultTimeStr, dayOffset };
+  }
+
+  // 表示用の時間HTML("ST 11:00 | JP 22:00" や "ST 15:00 | JP 02:00 +1日" など)
+  function formatEventTime(stDateStr, stTimeStr, lang) {
+    const stLabel = "ST " + stTimeStr;
+    if (lang === "en") return escapeHtml(stLabel);
+
+    const converted = convertSTtoLang(stDateStr, stTimeStr, lang);
+    const langLabel = lang.toUpperCase() + " " + converted.timeStr;
+
+    let badge = "";
+    if (converted.dayOffset > 0) {
+      badge = ` <span class="day-badge">${escapeHtml(t("day_offset_plus", lang))}</span>`;
+    } else if (converted.dayOffset < 0) {
+      badge = ` <span class="day-badge">${escapeHtml(t("day_offset_minus", lang))}</span>`;
+    }
+    return `${escapeHtml(stLabel)} | ${escapeHtml(langLabel)}${badge}`;
+  }
+
+  // scheduleが指定のST日付・曜日に該当するか(weekly / once 両対応)
+  function scheduleMatchesDate(schedule, dateStr, weekday) {
+    if (schedule.recurrence_type === "once") return schedule.specific_date === dateStr;
+    return schedule.day_of_week === weekday;
+  }
+
+  // 今日(ST基準)該当するスケジュールを時刻順で返す
+  function getTodaySchedules(schedules) {
+    const { dateStr, weekday } = getSTDate(0);
+    return schedules
+      .filter(s => scheduleMatchesDate(s, dateStr, weekday))
+      .map(s => Object.assign({}, s, { _occurrenceDate: dateStr }))
+      .sort((a, b) => a.st_time.localeCompare(b.st_time));
+  }
+
+  // 今日の残イベントのうち、直近1件(NEXT EVENT)を返す。なければnull
+  function getNextEvent(todaySchedules) {
+    const nowTime = getSTNowTime();
+    return todaySchedules.find(s => s.st_time.slice(0, 5) > nowTime) || null;
+  }
+
+  // ST基準で「今日から offsetDays 日分」をグルーピングして返す
+  function getWeekSchedules(schedules, days = 7) {
+    const week = [];
+    for (let i = 0; i < days; i++) {
+      const { dateStr, weekday } = getSTDate(i);
+      const events = schedules
+        .filter(s => scheduleMatchesDate(s, dateStr, weekday))
+        .sort((a, b) => a.st_time.localeCompare(b.st_time));
+      week.push({ dateStr, weekday, events });
+    }
+    return week;
+  }
+
+  // 1イベント行のHTMLを生成する(TODAY / SCHEDULE MANAGERプレビュー共用)
+  function renderEventRow(schedule, lang, isNext) {
+    const occurrenceDate = schedule._occurrenceDate || schedule.specific_date;
+    const title = v(schedule, "title", lang);
+    const note = v(schedule, "note_text", lang);
+    const important = v(schedule, "important_text", lang);
+    const timeLine = formatEventTime(occurrenceDate, (schedule.st_time || "").slice(0, 5), lang);
+
+    const tagHtml = schedule.rule_label
+      ? `<span class="event-tag tag-${escapeHtml(schedule.tag_color || "pink")}">${escapeHtml(schedule.rule_label)}</span>`
+      : "";
+
+    let noteHtml = "";
+    if (important) {
+      noteHtml = `<p class="today-event-note is-important">${escapeHtml(important)}</p>`;
+    } else if (note) {
+      noteHtml = `<p class="today-event-note">${escapeHtml(note)}</p>`;
+    }
+
+    const linkHtml = schedule.link_post_id
+      ? `<a class="today-event-btn" href="post.html?id=${schedule.link_post_id}">${escapeHtml(t("today_detail_link", lang))}</a>`
+      : "";
+
+    const thumbHtml = schedule.image_url
+      ? `<img src="${escapeHtml(schedule.image_url)}" alt="">`
+      : "";
+
+    return `
+      <div class="today-event-row${isNext ? " is-next" : ""}">
+        <div class="today-event-thumb">${thumbHtml}</div>
+        <div class="today-event-body">
+          <div class="today-event-title-row">
+            <span class="today-event-title">${escapeHtml(title)}</span>
+            ${tagHtml}
+          </div>
+          <div class="today-event-time">${timeLine}</div>
+          ${noteHtml}
+        </div>
+        ${linkHtml}
+      </div>
+    `;
+  }
+
+  // THIS WEEKの1日分のHTMLを生成する
+  function renderWeekDay(day, lang, isToday) {
+    const label = WEEKDAY_SHORT[lang][day.weekday];
+    const [, mo, d] = day.dateStr.split("-");
+    const titles = day.events.length
+      ? day.events.map(e => escapeHtml(v(e, "title", lang))).join(" / ")
+      : escapeHtml(t("week_no_events", lang));
+
+    return `
+      <div class="week-day${isToday ? " is-today" : ""}">
+        <div class="week-day-label">${escapeHtml(label)} ${Number(mo)}/${Number(d)}</div>
+        <div class="week-day-events">${titles}</div>
+      </div>
+    `;
+  }
+
   return {
     getLang, setLang, initLangButtons, v,
     fetchPosts, toArray, toYoutubeEmbed, toVideoEmbed, loadTikTokEmbeds,
     formatDate, excerpt, escapeHtml,
-    t, applyUIStrings
+    t, applyUIStrings,
+    fetchSchedules, getSTDate, getSTNowTime, convertSTtoLang, formatEventTime,
+    getTodaySchedules, getNextEvent, getWeekSchedules,
+    renderEventRow, renderWeekDay,
+    WEEKDAY_FULL, MONTH_EN
   };
 })();

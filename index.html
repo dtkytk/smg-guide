@@ -120,6 +120,50 @@
   </div>
 </section>
 
+<section class="today-card">
+  <div class="today-card-inner">
+    <div class="today-card-head">
+      <div class="today-head-left">
+        <div class="today-icon">📅</div>
+        <div>
+          <h2 class="today-title" data-i18n="today_title">TODAY</h2>
+          <p class="today-sub" id="today-sub" data-i18n="today_subtitle">今日のイベント</p>
+        </div>
+      </div>
+      <div class="today-date" id="today-date-text">-</div>
+    </div>
+
+    <div class="today-events" id="today-events-list">
+      <div class="empty-state" data-i18n="loading">読み込み中…</div>
+    </div>
+
+    <div class="today-card-divider"></div>
+
+    <div class="today-notice">
+      <div class="today-notice-head">
+        <span class="today-notice-icon">📣</span>
+        <h3 data-i18n="today_notice_heading">最新のお知らせ</h3>
+        <a href="notice.html" class="today-notice-more" data-i18n="today_notice_more">すべて見る ›</a>
+      </div>
+      <div id="today-notice-item">
+        <div class="empty-state" data-i18n="loading">読み込み中…</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="this-week">
+  <div class="this-week-inner">
+    <div class="this-week-head">
+      <h3 data-i18n="this_week_title">THIS WEEK</h3>
+      <p id="this-week-sub" data-i18n="this_week_subtitle">今週の予定</p>
+    </div>
+    <div class="week-list" id="week-list">
+      <div class="empty-state" data-i18n="loading">読み込み中…</div>
+    </div>
+  </div>
+</section>
+
 <div class="cards">
   <a class="card" href="events.html">
     <div class="icon-circle icon-events">⚔️</div>
@@ -144,17 +188,6 @@
   </a>
 </div>
 
-<div class="notice-wrap">
-  <div class="notice">
-    <div class="bell">🔔</div>
-    <div class="notice-body" id="notice-body">
-      <h4 data-i18n="notice_heading">重要なお知らせ</h4>
-      <p data-i18n="notice_loading">読み込み中…</p>
-    </div>
-    <a class="notice-link" href="notice.html" data-i18n="notice_link">お知らせ一覧 ›</a>
-  </div>
-</div>
-
 <footer>
   <h5>🌸 SMG ALLIANCE 🌸</h5>
   <p class="en">TOGETHER WE GROW, TOGETHER WE WIN.</p>
@@ -163,32 +196,78 @@
     <a href="admin.html" style="color:#fff; opacity:.7; text-decoration:underline;" data-i18n="footer_admin_post">管理者用:記事を投稿する</a>
     ／
     <a href="manage.html" style="color:#fff; opacity:.7; text-decoration:underline;" data-i18n="footer_admin_manage">記事の管理・削除</a>
+    ／
+    <a href="schedule-admin.html" style="color:#fff; opacity:.7; text-decoration:underline;">スケジュールを登録する</a>
   </p>
 </footer>
 
 <script src="config.js"></script>
 <script src="app.js"></script>
 <script>
+  let allSchedules = [];
   let latestNotice = null;
 
+  function renderTodayDate(lang) {
+    const { dateStr, weekday } = SMG.getSTDate(0);
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const text = (lang === "en")
+      ? `${SMG.MONTH_EN[m - 1]} ${d}, ${y}`
+      : `${y}.${String(m).padStart(2,"0")}.${String(d).padStart(2,"0")} (${SMG.WEEKDAY_FULL[lang][weekday].slice(0,3)})`;
+    document.getElementById("today-date-text").textContent = text;
+  }
+
+  function renderTodayEvents(lang) {
+    const list = document.getElementById("today-events-list");
+    const today = SMG.getTodaySchedules(allSchedules);
+    if (!today.length) {
+      list.innerHTML = `<div class="empty-state">${SMG.t("today_empty", lang)}</div>`;
+      return;
+    }
+    const next = SMG.getNextEvent(today);
+    list.innerHTML = today.map(s => SMG.renderEventRow(s, lang, !!(next && s.id === next.id))).join("");
+  }
+
+  function renderThisWeek(lang) {
+    const listEl = document.getElementById("week-list");
+    const week = SMG.getWeekSchedules(allSchedules, 7);
+    listEl.innerHTML = week.map((day, i) => SMG.renderWeekDay(day, lang, i === 0)).join("");
+  }
+
   function renderNotice(lang) {
-    const body = document.getElementById("notice-body");
+    const box = document.getElementById("today-notice-item");
     if (!latestNotice) {
-      body.innerHTML = `<h4>${SMG.t("notice_heading", lang)}</h4><p>${SMG.t("notice_empty", lang)}</p>`;
+      box.innerHTML = `<div class="empty-state">${SMG.t("notice_empty", lang)}</div>`;
       return;
     }
     const title = SMG.v(latestNotice, "title", lang);
     const content = SMG.excerpt(SMG.v(latestNotice, "content", lang), 60);
-    body.innerHTML = `<h4>${SMG.escapeHtml(title)}</h4><p>${SMG.escapeHtml(content)}</p>`;
+    box.innerHTML = `
+      <a class="today-notice-item-link" href="post.html?id=${latestNotice.id}">
+        <div class="today-notice-title">${SMG.escapeHtml(title)}</div>
+        <div class="today-notice-excerpt">${SMG.escapeHtml(content)}</div>
+        <div class="today-notice-date">${SMG.formatDate(latestNotice.created_at)}</div>
+      </a>
+    `;
+  }
+
+  function renderAll(lang) {
+    renderTodayDate(lang);
+    renderTodayEvents(lang);
+    renderThisWeek(lang);
+    renderNotice(lang);
   }
 
   async function init() {
-    const posts = await SMG.fetchPosts({ category: "NOTICE", limit: 1 });
-    latestNotice = posts[0] || null;
-    renderNotice(SMG.getLang());
+    const [schedules, noticePosts] = await Promise.all([
+      SMG.fetchSchedules({ published: true }),
+      SMG.fetchPosts({ category: "NOTICE", limit: 1 })
+    ]);
+    allSchedules = schedules;
+    latestNotice = noticePosts[0] || null;
+    renderAll(SMG.getLang());
   }
 
-  SMG.initLangButtons((lang) => renderNotice(lang));
+  SMG.initLangButtons((lang) => renderAll(lang));
   init();
 </script>
 

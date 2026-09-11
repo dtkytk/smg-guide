@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スケジュールの管理・削除 | SMG GUIDE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .manage-item{
+    padding:14px 0;
+    border-bottom:1px solid #f5dcea;
+  }
+  .manage-item:last-child{border-bottom:none;}
+  .manage-row{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+  .manage-info{min-width:0;}
+  .manage-info h3{
+    margin:0 0 4px;
+    font-size:.92rem;
+    color:var(--ink);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .manage-info .meta{font-size:.68rem; color:var(--ink-soft);}
+  .status-pill{
+    display:inline-block;
+    font-size:.62rem;
+    padding:2px 8px;
+    border-radius:10px;
+    margin-right:6px;
+    font-weight:700;
+  }
+  .status-pill.pub{background:#e9f9ee; color:#2f8a4c;}
+  .status-pill.draft{background:#f0eef5; color:#8a6b82;}
+  .delete-btn{
+    flex:none; padding:8px 16px; border-radius:20px;
+    border:1.5px solid #e8437f; background:#fff; color:#e8437f;
+    font-size:.75rem; font-weight:700; cursor:pointer;
+  }
+  .delete-btn:disabled{opacity:.5; cursor:not-allowed;}
+  .edit-btn{
+    flex:none; padding:8px 16px; border-radius:20px;
+    border:1.5px solid var(--purple-deep); background:#fff; color:var(--purple-deep);
+    font-size:.75rem; font-weight:700; cursor:pointer; margin-right:8px;
+  }
+  .edit-btn:disabled{opacity:.5; cursor:not-allowed;}
+  .edit-panel{display:none; margin-top:14px; padding-top:14px; border-top:1px dashed #f0cfe0;}
+  .edit-panel.open{display:block;}
+  .edit-actions{display:flex; gap:10px; margin-top:6px;}
+  .edit-actions .submit-btn{width:auto; padding:10px 22px; font-size:.82rem;}
+  .cancel-btn{
+    padding:10px 22px; border-radius:30px; border:1.5px solid #ccc;
+    background:#fff; color:#777; font-size:.82rem; font-weight:700; cursor:pointer;
+  }
+  .recur-toggle{display:flex; gap:10px; margin-bottom:6px;}
+  .recur-toggle label{
+    flex:1; text-align:center; padding:8px 0; border-radius:12px;
+    border:1.5px solid #f0d5e4; font-size:.78rem; font-weight:700;
+    color:var(--ink-soft); cursor:pointer;
+  }
+  .recur-toggle input{display:none;}
+  .recur-toggle label.active{border-color:var(--pink-deep); background:#fff0f5; color:var(--pink-deep);}
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="topbar">
+    <a class="brand" href="index.html">
+      <span class="mark">🌸</span>
+      <div>
+        <div class="brand-name">SMG</div>
+        <div class="brand-sub">SAKURA&nbsp;MIRAGE</div>
+      </div>
+    </a>
+  </div>
+  <p class="page-eyebrow">🔒 管理者専用</p>
+  <h1 class="page-title purple">MANAGE</h1>
+  <p class="breadcrumb"><a href="index.html">HOME</a> ／ スケジュールの管理・削除</p>
+</header>
+
+<main class="page-body admin-wrap">
+  <a class="back-link" href="schedule-admin.html">‹ スケジュール投稿ページへ</a>
+
+  <div class="admin-card">
+    <h2>スケジュールの管理・削除</h2>
+    <div class="field">
+      <label for="f-password">合言葉</label>
+      <input type="password" id="f-password" placeholder="合言葉を入力">
+    </div>
+    <button type="button" class="submit-btn" id="load-btn">一覧を読み込む</button>
+    <div id="form-msg"></div>
+  </div>
+
+  <div class="admin-card" id="list-card" style="margin-top:18px; display:none;">
+    <h2>スケジュール一覧(下書きも含む)</h2>
+    <div id="list"></div>
+  </div>
+</main>
+
+<footer>
+  <h5>🌸 SMG ALLIANCE 🌸</h5>
+  <p class="en">TOGETHER WE GROW, TOGETHER WE WIN.</p>
+  <p class="copy">© Sakura Mirage Alliance. All Rights Reserved.</p>
+</footer>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  const cfg = window.SMG_CONFIG || {};
+  const msgBox = document.getElementById("form-msg");
+  const loadBtn = document.getElementById("load-btn");
+  const listCard = document.getElementById("list-card");
+  const list = document.getElementById("list");
+  let currentKey = "";
+  let schedulesById = {};
+  let linkOptionsHtml = '<option value="">リンクなし</option>';
+
+  const WEEKDAY_JP = ["日曜日","月曜日","火曜日","水曜日","木曜日","金曜日","土曜日"];
+
+  function showMessage(text, type) {
+    msgBox.textContent = text;
+    msgBox.className = "form-msg " + type;
+  }
+
+  async function loadLinkOptions() {
+    const [events, guides] = await Promise.all([
+      SMG.fetchPosts({ category: "EVENTS" }),
+      SMG.fetchPosts({ category: "GUIDES" })
+    ]);
+    linkOptionsHtml += [...events, ...guides]
+      .map(p => `<option value="${p.id}">[${p.category}] ${SMG.escapeHtml(p.title)}</option>`)
+      .join("");
+  }
+
+  function scheduleSummary(s) {
+    const when = s.recurrence_type === "weekly"
+      ? "毎週" + WEEKDAY_JP[s.day_of_week]
+      : s.specific_date + "(単発)";
+    return `${when} ・ ST ${(s.st_time || "").slice(0,5)}`;
+  }
+
+  function render(schedules) {
+    schedulesById = {};
+    schedules.forEach(s => schedulesById[s.id] = s);
+
+    if (!schedules.length) {
+      list.innerHTML = '<div class="empty-state">スケジュールがありません。</div>';
+      return;
+    }
+
+    list.innerHTML = schedules.map(s => `
+      <div class="manage-item" data-id="${s.id}">
+        <div class="manage-row">
+          <div class="manage-info">
+            <h3>
+              <span class="status-pill ${s.published ? "pub" : "draft"}">${s.published ? "公開中" : "下書き"}</span>
+              ${SMG.escapeHtml(s.title || "(無題)")}
+              ${s.rule_label ? `<span class="event-tag tag-${SMG.escapeHtml(s.tag_color||"pink")}" style="margin-left:6px;">${SMG.escapeHtml(s.rule_label)}</span>` : ""}
+            </h3>
+            <div class="meta">${scheduleSummary(s)}</div>
+          </div>
+          <div>
+            <button class="edit-btn" data-id="${s.id}">編集</button>
+            <button class="delete-btn" data-id="${s.id}">削除</button>
+          </div>
+        </div>
+        <div class="edit-panel" id="edit-panel-${s.id}"></div>
+      </div>
+    `).join("");
+
+    list.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", () => deleteSchedule(btn.dataset.id, btn));
+    });
+    list.querySelectorAll(".edit-btn").forEach(btn => {
+      btn.addEventListener("click", () => toggleEditPanel(btn.dataset.id));
+    });
+  }
+
+  function editFormHtml(s) {
+    const isWeekly = s.recurrence_type === "weekly";
+    return `
+      <div class="field"><label>イベント名</label><input type="text" id="e-title-${s.id}" value="${SMG.escapeHtml(s.title||"")}"></div>
+      <div class="field"><label>タグ文言</label><input type="text" id="e-rule-${s.id}" value="${SMG.escapeHtml(s.rule_label||"")}"></div>
+      <div class="field">
+        <label>タグの色</label>
+        <select id="e-color-${s.id}">
+          ${["pink","purple","orange","red","green"].map(c => `<option value="${c}" ${s.tag_color===c?"selected":""}>${c}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field">
+        <label>繰り返し設定</label>
+        <div class="recur-toggle">
+          <label class="${isWeekly?"active":""}" id="e-recur-weekly-label-${s.id}">
+            <input type="radio" name="e-recurrence-${s.id}" id="e-recur-weekly-${s.id}" value="weekly" ${isWeekly?"checked":""}>
+            <span>毎週</span>
+          </label>
+          <label class="${!isWeekly?"active":""}" id="e-recur-once-label-${s.id}">
+            <input type="radio" name="e-recurrence-${s.id}" id="e-recur-once-${s.id}" value="once" ${!isWeekly?"checked":""}>
+            <span>単発</span>
+          </label>
+        </div>
+      </div>
+      <div class="field" id="e-field-day-${s.id}" style="${isWeekly?"":"display:none;"}">
+        <label>曜日(ST基準)</label>
+        <select id="e-day-${s.id}">
+          ${["月","火","水","木","金","土","日"].map((label,i) => {
+            const val = i + 1 > 6 ? 0 : i + 1;
+            return `<option value="${val}" ${s.day_of_week===val?"selected":""}>${label}曜日</option>`;
+          }).join("")}
+        </select>
+      </div>
+      <div class="field" id="e-field-date-${s.id}" style="${isWeekly?"display:none;":""}">
+        <label>日付(ST基準)</label>
+        <input type="date" id="e-date-${s.id}" value="${s.specific_date||""}">
+      </div>
+      <div class="field"><label>ST開始時刻</label><input type="time" id="e-time-${s.id}" value="${(s.st_time||"").slice(0,5)}"></div>
+
+      <div class="field"><label>画像URL(空欄可)</label><input type="text" id="e-image-${s.id}" value="${SMG.escapeHtml(s.image_url||"")}"></div>
+
+      <div class="field"><label>Note</label><textarea id="e-note-${s.id}">${SMG.escapeHtml(s.note_text||"")}</textarea></div>
+      <div class="field"><label>Important</label><textarea id="e-important-${s.id}">${SMG.escapeHtml(s.important_text||"")}</textarea></div>
+
+      <div class="field">
+        <label>既存記事へのリンク</label>
+        <select id="e-link-${s.id}">${linkOptionsHtml}</select>
+      </div>
+
+      <div class="field switch-row">
+        <input type="checkbox" id="e-published-${s.id}" ${s.published?"checked":""} style="width:20px;height:20px;">
+        <label for="e-published-${s.id}" style="margin:0;">公開する</label>
+      </div>
+
+      <div class="edit-actions">
+        <button type="button" class="submit-btn" id="e-save-${s.id}">保存する</button>
+        <button type="button" class="cancel-btn" id="e-cancel-${s.id}">キャンセル</button>
+      </div>
+    `;
+  }
+
+  function toggleEditPanel(id) {
+    const panel = document.getElementById("edit-panel-" + id);
+    const isOpen = panel.classList.contains("open");
+
+    document.querySelectorAll(".edit-panel.open").forEach(p => {
+      p.classList.remove("open");
+      p.innerHTML = "";
+    });
+    if (isOpen) return;
+
+    const s = schedulesById[id];
+    panel.innerHTML = editFormHtml(s);
+    panel.classList.add("open");
+
+    // 選択済みリンクを反映
+    const linkSelect = document.getElementById("e-link-" + id);
+    if (s.link_post_id) linkSelect.value = String(s.link_post_id);
+
+    const weeklyRadio = document.getElementById("e-recur-weekly-" + id);
+    const onceRadio = document.getElementById("e-recur-once-" + id);
+    const dayField = document.getElementById("e-field-day-" + id);
+    const dateField = document.getElementById("e-field-date-" + id);
+    const weeklyLabel = document.getElementById("e-recur-weekly-label-" + id);
+    const onceLabel = document.getElementById("e-recur-once-label-" + id);
+
+    function updateRecurUI() {
+      const isW = weeklyRadio.checked;
+      dayField.style.display = isW ? "" : "none";
+      dateField.style.display = isW ? "none" : "";
+      weeklyLabel.classList.toggle("active", isW);
+      onceLabel.classList.toggle("active", !isW);
+    }
+    weeklyRadio.addEventListener("change", updateRecurUI);
+    onceRadio.addEventListener("change", updateRecurUI);
+
+    document.getElementById("e-cancel-" + id).addEventListener("click", () => {
+      panel.classList.remove("open");
+      panel.innerHTML = "";
+    });
+    document.getElementById("e-save-" + id).addEventListener("click", () => saveEdit(id));
+  }
+
+  async function saveEdit(id) {
+    const saveBtn = document.getElementById("e-save-" + id);
+    saveBtn.disabled = true;
+    saveBtn.textContent = "保存中…";
+    showMessage("保存中…", "ok");
+
+    try {
+      const isWeekly = document.getElementById("e-recur-weekly-" + id).checked;
+      const linkVal = document.getElementById("e-link-" + id).value;
+
+      const body = {
+        schedule_id: Number(id),
+        key: currentKey,
+        p_title: document.getElementById("e-title-" + id).value.trim(),
+        p_rule_label: document.getElementById("e-rule-" + id).value.trim(),
+        p_tag_color: document.getElementById("e-color-" + id).value,
+        p_image_url: document.getElementById("e-image-" + id).value.trim(),
+        p_recurrence_type: isWeekly ? "weekly" : "once",
+        p_day_of_week: isWeekly ? Number(document.getElementById("e-day-" + id).value) : null,
+        p_specific_date: isWeekly ? null : document.getElementById("e-date-" + id).value,
+        p_st_time: document.getElementById("e-time-" + id).value,
+        p_note_text: document.getElementById("e-note-" + id).value.trim(),
+        p_important_text: document.getElementById("e-important-" + id).value.trim(),
+        p_link_post_id: linkVal ? Number(linkVal) : null,
+        p_published: document.getElementById("e-published-" + id).checked
+      };
+
+      const url = cfg.SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/rpc/update_schedule";
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          apikey: cfg.SUPABASE_PUBLISHABLE_KEY,
+          Authorization: "Bearer " + cfg.SUPABASE_PUBLISHABLE_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("[SMG] 更新エラー:", errText);
+        showMessage(errText.includes("合言葉が間違っています") ? "合言葉が間違っています。" : "保存に失敗しました。", "err");
+        saveBtn.disabled = false;
+        saveBtn.textContent = "保存する";
+        return;
+      }
+
+      showMessage("保存しました!", "ok");
+      loadSchedules();
+    } catch (err) {
+      console.error("[SMG] エラー:", err);
+      showMessage("エラーが発生しました: " + err.message, "err");
+      saveBtn.disabled = false;
+      saveBtn.textContent = "保存する";
+    }
+  }
+
+  async function loadSchedules() {
+    const password = document.getElementById("f-password").value;
+    if (!password) {
+      showMessage("合言葉を入力してください。", "err");
+      return;
+    }
+    currentKey = password;
+    loadBtn.disabled = true;
+    showMessage("読み込み中…", "ok");
+
+    try {
+      const url = cfg.SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/rpc/list_all_schedules";
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          apikey: cfg.SUPABASE_PUBLISHABLE_KEY,
+          Authorization: "Bearer " + cfg.SUPABASE_PUBLISHABLE_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ key: password })
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("[SMG] 一覧取得エラー:", errText);
+        showMessage(errText.includes("合言葉が間違っています") ? "合言葉が間違っています。" : "読み込みに失敗しました。", "err");
+        return;
+      }
+
+      const schedules = await res.json();
+      listCard.style.display = "block";
+      render(schedules);
+      showMessage("読み込みました。(" + schedules.length + "件)", "ok");
+    } catch (err) {
+      console.error("[SMG] エラー:", err);
+      showMessage("エラーが発生しました: " + err.message, "err");
+    } finally {
+      loadBtn.disabled = false;
+    }
+  }
+
+  async function deleteSchedule(id, btn) {
+    if (!confirm("このスケジュールを削除します。よろしいですか?元に戻せません。")) return;
+
+    btn.disabled = true;
+    btn.textContent = "削除中…";
+
+    try {
+      const url = cfg.SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/rpc/delete_schedule";
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          apikey: cfg.SUPABASE_PUBLISHABLE_KEY,
+          Authorization: "Bearer " + cfg.SUPABASE_PUBLISHABLE_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ schedule_id: Number(id), key: currentKey })
+      });
+
+      if (!res.ok) {
+        console.error("[SMG] 削除エラー:", await res.text());
+        showMessage("削除に失敗しました。", "err");
+        btn.disabled = false;
+        btn.textContent = "削除";
+        return;
+      }
+
+      const item = list.querySelector(`.manage-item[data-id="${id}"]`);
+      if (item) item.remove();
+      showMessage("削除しました。", "ok");
+    } catch (err) {
+      console.error("[SMG] エラー:", err);
+      showMessage("エラーが発生しました: " + err.message, "err");
+      btn.disabled = false;
+      btn.textContent = "削除";
+    }
+  }
+
+  loadBtn.addEventListener("click", loadSchedules);
+  loadLinkOptions();
+</script>
+
+</body>
+</html>

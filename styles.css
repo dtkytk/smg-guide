@@ -141,7 +141,7 @@ a{color:inherit;}
   padding:0 12px;
   position:relative;
   z-index:4;
-  margin-top:-90px;
+  margin-top:22px;
   display:flex;
   flex-wrap:nowrap;
   gap:8px;
@@ -551,6 +551,274 @@ a{color:inherit;}
   height:auto;
   border-radius:14px;
   border:1px solid #f0d5e4;
+}
+
+/* ===== TODAY CARD (top page) ===== */
+.today-card{
+  max-width:1040px;
+  margin:-90px auto 0;
+  padding:0 12px;
+  position:relative;
+  z-index:4;
+}
+@media(min-width:760px){
+  .today-card{padding:0 18px;}
+}
+.today-card-inner{
+  background:#fffdfd;
+  border-radius:20px;
+  padding:20px 16px;
+  box-shadow:0 16px 34px rgba(139,92,214,.14);
+  border:1px solid #f7e6f0;
+}
+@media(min-width:760px){
+  .today-card-inner{border-radius:28px; padding:30px 32px;}
+}
+.today-card-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:16px;
+}
+.today-head-left{display:flex; align-items:center; gap:12px;}
+.today-icon{
+  width:44px;height:44px;min-width:44px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#f472a8,#e8437f);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.15rem;
+}
+.today-title{
+  font-family:'Cormorant Garamond', serif;
+  font-weight:600;
+  font-size:1.6rem;
+  color:var(--pink-deep);
+  margin:0;
+  line-height:1;
+}
+.today-sub{
+  font-size:.7rem;
+  color:var(--ink-soft);
+  margin:2px 0 0;
+}
+.today-date{
+  font-weight:700;
+  font-size:.92rem;
+  color:var(--ink);
+  white-space:nowrap;
+}
+
+/* ---- イベント行 ---- */
+.today-events{display:flex; flex-direction:column; gap:12px;}
+.today-event-row{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  background:#fffafc;
+  border:1px solid #f7e6f0;
+  border-radius:16px;
+  padding:12px;
+}
+.today-event-row.is-next{
+  border-left:3px solid var(--pink-deep);
+  box-shadow:0 8px 18px rgba(232,67,127,.08);
+}
+.today-event-thumb{
+  width:56px;height:56px;min-width:56px;
+  border-radius:12px;
+  overflow:hidden;
+  background:linear-gradient(135deg,#f6d9ea,#e5cdf0);
+}
+@media(min-width:760px){
+  .today-event-thumb{width:72px;height:72px;min-width:72px; border-radius:14px;}
+}
+.today-event-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.today-event-body{flex:1; min-width:0;}
+.today-event-title-row{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:4px;
+}
+.today-event-title{
+  font-family:'Cormorant Garamond', serif;
+  font-weight:600;
+  font-size:1.05rem;
+  color:var(--ink);
+}
+.event-tag{
+  display:inline-block;
+  font-size:.62rem;
+  font-weight:700;
+  padding:3px 10px;
+  border-radius:10px;
+  white-space:nowrap;
+}
+.tag-orange{background:#fbe8d8; color:#c9773a;}
+.tag-purple{background:#ece3fa; color:#8b5cd6;}
+.tag-pink{background:#ffd9e8; color:#e8437f;}
+.tag-red{background:#fbe0e4; color:#c85465;}
+.tag-green{background:#e3f5ea; color:#4f9d6e;}
+
+.today-event-time{
+  font-size:.78rem;
+  color:var(--ink);
+  margin-bottom:4px;
+}
+.day-badge{
+  display:inline-block;
+  font-size:.6rem;
+  font-weight:700;
+  padding:1px 7px;
+  border-radius:8px;
+  background:var(--pink-soft);
+  color:var(--pink-deep);
+  vertical-align:middle;
+}
+.today-event-note{
+  font-size:.75rem;
+  line-height:1.5;
+  color:var(--ink-soft);
+  margin:0;
+}
+.today-event-note.is-important{
+  color:var(--pink-deep);
+  font-weight:700;
+}
+.today-event-btn{
+  align-self:center;
+  white-space:nowrap;
+  padding:8px 16px;
+  border-radius:20px;
+  background:linear-gradient(90deg,#f06090,#e8437f);
+  color:#fff;
+  font-size:.7rem;
+  font-weight:700;
+  text-decoration:none;
+}
+@media(min-width:760px){
+  .today-event-btn{padding:10px 20px; font-size:.78rem;}
+}
+
+/* ---- TODAYカード内の「最新のお知らせ」 ---- */
+.today-card-divider{
+  height:1px;
+  background:#f5dcea;
+  margin:20px 0;
+}
+.today-notice-head{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:10px;
+}
+.today-notice-head h3{
+  font-family:'Cormorant Garamond', serif;
+  font-size:1.05rem;
+  color:var(--pink-deep);
+  margin:0;
+  flex:1;
+}
+.today-notice-icon{font-size:1rem;}
+.today-notice-more{
+  font-size:.7rem;
+  font-weight:700;
+  color:var(--pink-deep);
+  text-decoration:none;
+  white-space:nowrap;
+}
+.today-notice-item-link{
+  display:block;
+  text-decoration:none;
+  background:#fffafc;
+  border:1px solid #f7e6f0;
+  border-radius:14px;
+  padding:12px 14px;
+}
+.today-notice-title{
+  font-size:.88rem;
+  font-weight:700;
+  color:var(--ink);
+  margin-bottom:4px;
+}
+.today-notice-excerpt{
+  font-size:.75rem;
+  color:var(--ink-soft);
+  line-height:1.6;
+  margin-bottom:6px;
+}
+.today-notice-date{
+  font-size:.65rem;
+  color:#c090b0;
+}
+
+/* ===== THIS WEEK (top page) ===== */
+.this-week{
+  max-width:1040px;
+  margin:18px auto 0;
+  padding:0 12px;
+}
+@media(min-width:760px){
+  .this-week{padding:0 18px;}
+}
+.this-week-inner{
+  background:#fffafc;
+  border:1px solid #f7dcea;
+  border-radius:18px;
+  padding:16px 18px;
+}
+.this-week-head{margin-bottom:12px;}
+.this-week-head h3{
+  font-family:'Cormorant Garamond', serif;
+  font-size:1.05rem;
+  color:var(--purple-deep);
+  margin:0 0 2px;
+}
+.this-week-head p{
+  font-size:.68rem;
+  color:var(--ink-soft);
+  margin:0;
+}
+.week-list{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.week-day{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  padding:8px 10px;
+  border-radius:10px;
+}
+.week-day.is-today{background:var(--pink-soft);}
+.week-day-label{
+  font-size:.7rem;
+  font-weight:700;
+  color:var(--ink);
+  min-width:52px;
+}
+.week-day-events{
+  font-size:.72rem;
+  color:var(--ink-soft);
+  flex:1;
+}
+.week-day.is-today .week-day-events{color:var(--ink);}
+@media(min-width:760px){
+  .week-list{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:8px;
+  }
+  .week-day{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:4px;
+    text-align:left;
+  }
 }
 
 /* ===== FOOTER (shared) ===== */
