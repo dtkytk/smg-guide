@@ -62,6 +62,17 @@
   }
   .recur-toggle input{display:none;}
   .recur-toggle label.active{border-color:var(--pink-deep); background:#fff0f5; color:var(--pink-deep);}
+  .day-checks{display:flex; flex-wrap:wrap; gap:8px;}
+  .day-checks label{
+    display:flex; align-items:center; gap:5px;
+    padding:6px 10px; border-radius:10px;
+    border:1.5px solid #f0d5e4; font-size:.76rem; font-weight:700;
+    color:var(--ink-soft); cursor:pointer;
+  }
+  .day-checks input{width:14px; height:14px; margin:0;}
+  .day-checks label.active{border-color:var(--pink-deep); background:#fff0f5; color:var(--pink-deep);}
+  .interval-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .interval-row input[type="number"]{width:70px;}
 </style>
 </head>
 <body>
@@ -118,7 +129,7 @@
   let schedulesById = {};
   let linkOptionsHtml = '<option value="">リンクなし</option>';
 
-  const WEEKDAY_JP = ["日曜日","月曜日","火曜日","水曜日","木曜日","金曜日","土曜日"];
+  const WEEKDAY_JP = ["日","月","火","水","木","金","土"];
 
   function showMessage(text, type) {
     msgBox.textContent = text;
@@ -136,9 +147,15 @@
   }
 
   function scheduleSummary(s) {
-    const when = s.recurrence_type === "weekly"
-      ? "毎週" + WEEKDAY_JP[s.day_of_week]
-      : s.specific_date + "(単発)";
+    let when;
+    if (s.recurrence_type === "weekly") {
+      const days = Array.isArray(s.day_of_week) ? s.day_of_week.map(d => WEEKDAY_JP[d]).join("・") : "";
+      when = "毎週" + days;
+    } else if (s.recurrence_type === "interval") {
+      when = s.start_date + "から" + s.interval_days + "日ごと";
+    } else {
+      when = s.specific_date + "(単発)";
+    }
     return `${when} ・ ST ${(s.st_time || "").slice(0,5)}`;
   }
 
@@ -180,7 +197,9 @@
   }
 
   function editFormHtml(s) {
-    const isWeekly = s.recurrence_type === "weekly";
+    const type = s.recurrence_type || "weekly";
+    const selectedDays = Array.isArray(s.day_of_week) ? s.day_of_week : [];
+    const dayLabels = [["1","月"],["2","火"],["3","水"],["4","木"],["5","金"],["6","土"],["0","日"]];
     return `
       <div class="field"><label>イベント名</label><input type="text" id="e-title-${s.id}" value="${SMG.escapeHtml(s.title||"")}"></div>
       <div class="field"><label>タグ文言</label><input type="text" id="e-rule-${s.id}" value="${SMG.escapeHtml(s.rule_label||"")}"></div>
@@ -193,26 +212,42 @@
       <div class="field">
         <label>繰り返し設定</label>
         <div class="recur-toggle">
-          <label class="${isWeekly?"active":""}" id="e-recur-weekly-label-${s.id}">
-            <input type="radio" name="e-recurrence-${s.id}" id="e-recur-weekly-${s.id}" value="weekly" ${isWeekly?"checked":""}>
+          <label class="${type==="weekly"?"active":""}" id="e-recur-weekly-label-${s.id}">
+            <input type="radio" name="e-recurrence-${s.id}" id="e-recur-weekly-${s.id}" value="weekly" ${type==="weekly"?"checked":""}>
             <span>毎週</span>
           </label>
-          <label class="${!isWeekly?"active":""}" id="e-recur-once-label-${s.id}">
-            <input type="radio" name="e-recurrence-${s.id}" id="e-recur-once-${s.id}" value="once" ${!isWeekly?"checked":""}>
+          <label class="${type==="interval"?"active":""}" id="e-recur-interval-label-${s.id}">
+            <input type="radio" name="e-recurrence-${s.id}" id="e-recur-interval-${s.id}" value="interval" ${type==="interval"?"checked":""}>
+            <span>間隔</span>
+          </label>
+          <label class="${type==="once"?"active":""}" id="e-recur-once-label-${s.id}">
+            <input type="radio" name="e-recurrence-${s.id}" id="e-recur-once-${s.id}" value="once" ${type==="once"?"checked":""}>
             <span>単発</span>
           </label>
         </div>
       </div>
-      <div class="field" id="e-field-day-${s.id}" style="${isWeekly?"":"display:none;"}">
-        <label>曜日(ST基準)</label>
-        <select id="e-day-${s.id}">
-          ${["月","火","水","木","金","土","日"].map((label,i) => {
-            const val = i + 1 > 6 ? 0 : i + 1;
-            return `<option value="${val}" ${s.day_of_week===val?"selected":""}>${label}曜日</option>`;
-          }).join("")}
-        </select>
+      <div class="field" id="e-field-day-${s.id}" style="${type==="weekly"?"":"display:none;"}">
+        <label>曜日(ST基準・複数選択可)</label>
+        <div class="day-checks">
+          ${dayLabels.map(([val,label]) => `
+            <label class="${selectedDays.includes(Number(val))?"active":""}">
+              <input type="checkbox" class="e-day-${s.id}" value="${val}" ${selectedDays.includes(Number(val))?"checked":""}>
+              <span>${label}</span>
+            </label>
+          `).join("")}
+        </div>
       </div>
-      <div class="field" id="e-field-date-${s.id}" style="${isWeekly?"display:none;":""}">
+      <div class="field" id="e-field-interval-${s.id}" style="${type==="interval"?"":"display:none;"}">
+        <label>間隔繰り返し(ST基準)</label>
+        <div class="interval-row">
+          <span>開始日</span>
+          <input type="date" id="e-start-date-${s.id}" value="${s.start_date||""}">
+          <span>から</span>
+          <input type="number" id="e-interval-days-${s.id}" min="1" value="${s.interval_days||2}">
+          <span>日ごと</span>
+        </div>
+      </div>
+      <div class="field" id="e-field-date-${s.id}" style="${type==="once"?"":"display:none;"}">
         <label>日付(ST基準)</label>
         <input type="date" id="e-date-${s.id}" value="${s.specific_date||""}">
       </div>
@@ -259,21 +294,37 @@
     if (s.link_post_id) linkSelect.value = String(s.link_post_id);
 
     const weeklyRadio = document.getElementById("e-recur-weekly-" + id);
+    const intervalRadio = document.getElementById("e-recur-interval-" + id);
     const onceRadio = document.getElementById("e-recur-once-" + id);
     const dayField = document.getElementById("e-field-day-" + id);
+    const intervalField = document.getElementById("e-field-interval-" + id);
     const dateField = document.getElementById("e-field-date-" + id);
     const weeklyLabel = document.getElementById("e-recur-weekly-label-" + id);
+    const intervalLabel = document.getElementById("e-recur-interval-label-" + id);
     const onceLabel = document.getElementById("e-recur-once-label-" + id);
+    const dayCheckboxes = Array.from(document.querySelectorAll(".e-day-" + id));
+
+    function currentType() {
+      if (weeklyRadio.checked) return "weekly";
+      if (intervalRadio.checked) return "interval";
+      return "once";
+    }
 
     function updateRecurUI() {
-      const isW = weeklyRadio.checked;
-      dayField.style.display = isW ? "" : "none";
-      dateField.style.display = isW ? "none" : "";
-      weeklyLabel.classList.toggle("active", isW);
-      onceLabel.classList.toggle("active", !isW);
+      const t = currentType();
+      dayField.style.display = t === "weekly" ? "" : "none";
+      intervalField.style.display = t === "interval" ? "" : "none";
+      dateField.style.display = t === "once" ? "" : "none";
+      weeklyLabel.classList.toggle("active", t === "weekly");
+      intervalLabel.classList.toggle("active", t === "interval");
+      onceLabel.classList.toggle("active", t === "once");
     }
     weeklyRadio.addEventListener("change", updateRecurUI);
+    intervalRadio.addEventListener("change", updateRecurUI);
     onceRadio.addEventListener("change", updateRecurUI);
+    dayCheckboxes.forEach(cb => {
+      cb.addEventListener("change", () => cb.closest("label").classList.toggle("active", cb.checked));
+    });
 
     document.getElementById("e-cancel-" + id).addEventListener("click", () => {
       panel.classList.remove("open");
@@ -289,8 +340,12 @@
     showMessage("保存中…", "ok");
 
     try {
-      const isWeekly = document.getElementById("e-recur-weekly-" + id).checked;
+      const weeklyRadio = document.getElementById("e-recur-weekly-" + id);
+      const intervalRadio = document.getElementById("e-recur-interval-" + id);
+      const type = weeklyRadio.checked ? "weekly" : (intervalRadio.checked ? "interval" : "once");
       const linkVal = document.getElementById("e-link-" + id).value;
+      const selectedDays = Array.from(document.querySelectorAll(".e-day-" + id))
+        .filter(cb => cb.checked).map(cb => Number(cb.value));
 
       const body = {
         schedule_id: Number(id),
@@ -299,9 +354,11 @@
         p_rule_label: document.getElementById("e-rule-" + id).value.trim(),
         p_tag_color: document.getElementById("e-color-" + id).value,
         p_image_url: document.getElementById("e-image-" + id).value.trim(),
-        p_recurrence_type: isWeekly ? "weekly" : "once",
-        p_day_of_week: isWeekly ? Number(document.getElementById("e-day-" + id).value) : null,
-        p_specific_date: isWeekly ? null : document.getElementById("e-date-" + id).value,
+        p_recurrence_type: type,
+        p_day_of_week: type === "weekly" ? selectedDays : null,
+        p_interval_days: type === "interval" ? Number(document.getElementById("e-interval-days-" + id).value) : null,
+        p_start_date: type === "interval" ? document.getElementById("e-start-date-" + id).value : null,
+        p_specific_date: type === "once" ? document.getElementById("e-date-" + id).value : null,
         p_st_time: document.getElementById("e-time-" + id).value,
         p_note_text: document.getElementById("e-note-" + id).value.trim(),
         p_important_text: document.getElementById("e-important-" + id).value.trim(),
